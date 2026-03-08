@@ -18176,6 +18176,7 @@ GameObject:
   - component: {fileID: 1854722603}
   - component: {fileID: 1854722606}
   - component: {fileID: 1854722607}
+  - component: {fileID: 1854722608}
   m_Layer: 0
   m_Name: Managers
   m_TagString: Untagged
@@ -18254,6 +18255,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3bedef8c48ced7d4c900c52e0e49855e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &1854722608
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1854722602}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 92764222ae0294448a9345b9c9ba814d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  woodPrefab: {fileID: 2705535562785027607, guid: 680d9749208d7a449a1f61aa54c5e1a2, type: 3}
+  stonePrefab: {fileID: 6037385188932368682, guid: 1f133796ffa617b4b921d7cdb99fa972, type: 3}
+  berryPrefab: {fileID: 2809222737991278840, guid: b4150b3bb280812439b8b491b6b6b07e, type: 3}
 --- !u!1 &1857195359
 GameObject:
   m_ObjectHideFlags: 0
@@ -18264,10 +18280,11 @@ GameObject:
   m_Component:
   - component: {fileID: 1857195362}
   - component: {fileID: 1857195361}
+  - component: {fileID: 1857195368}
+  - component: {fileID: 1857195366}
+  - component: {fileID: 1857195367}
   - component: {fileID: 1857195363}
   - component: {fileID: 1857195364}
-  - component: {fileID: 1857195366}
-  - component: {fileID: 1857195365}
   m_Layer: 0
   m_Name: Colono
   m_TagString: Colono
@@ -18336,7 +18353,7 @@ Transform:
   m_GameObject: {fileID: 1857195359}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.85, y: -3.27, z: 0}
+  m_LocalPosition: {x: 0.25, y: -3.7, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -18399,18 +18416,6 @@ CapsuleCollider2D:
   m_Offset: {x: 0, y: 0}
   m_Size: {x: 1, y: 2}
   m_Direction: 0
---- !u!114 &1857195365
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1857195359}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2e9d579f002cf974a9f648dd98c375b2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &1857195366
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18421,6 +18426,33 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 87ed46f616d07524ba4aea8e12549546, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1857195367
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1857195359}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ecc90cef0859ee742b7afad785bc96bf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  actionName: Accion_Base
+  cost: 1
+  isDone: 0
+--- !u!114 &1857195368
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1857195359}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 44761f94f2cab8d4c9eaee63f303d644, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &2020003279
