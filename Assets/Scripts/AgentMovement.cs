@@ -1,18 +1,47 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
+
+[RequireComponent(typeof(NavMeshAgent))]
 
 public class AgentMovement : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
+    private NavMeshAgent agent;
+
+    void Awake()
     {
-        
+        agent = GetComponent<NavMeshAgent>();
+
+        agent.updateRotation = false;
+        agent.updateUpAxis = false;
     }
 
-    // Update is called once per frame
-    void Update()
+    // Función para moverse
+    public void MoveTo(Vector3 destination)
     {
-        
+        agent.SetDestination(destination);
+    }
+
+    // Función para saber si ha llegado a su destino
+    public bool HasReachedDestination()
+    {
+        if (!agent.pathPending)
+        {
+            if (agent.remainingDistance <= agent.stoppingDistance + 0.1f)
+            {
+                if (!agent.hasPath || agent.velocity.sqrMagnitude == 0f)
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    // Función para detener al agente en seco
+    public void StopMoving()
+    {
+        agent.ResetPath();
     }
 }

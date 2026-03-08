@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Tilemaps;
-using System.Collections;
 using NavMeshPlus.Components;
 
 public class MovementController : MonoBehaviour

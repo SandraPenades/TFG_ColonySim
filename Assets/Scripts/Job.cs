@@ -2,17 +2,22 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Job : MonoBehaviour
+public class Job
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+    // Los tipos de trabajo en el juego
+    public enum JobType {Talar, Minar, Recolectar, Construir}
 
-    // Update is called once per frame
-    void Update()
+    // En qué estado se encuentra el trabajo
+    public enum JobState {Pendiente, EnProgreso, Completado}
+
+    public JobType type;
+    public JobState state;
+    public Vector3Int position;
+
+    public Job(JobType type, Vector3Int position)
     {
-        
+        this.type = type;
+        this.position = position;
+        this.state = JobState.Pendiente; // Por defecto
     }
 }
