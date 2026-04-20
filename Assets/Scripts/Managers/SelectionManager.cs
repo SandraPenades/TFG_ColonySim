@@ -2,7 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.Tilemaps;
 using TMPro;
 using UnityEngine.EventSystems;
 
@@ -11,36 +10,24 @@ public class SelectionManager : MonoBehaviour
     public GameObject actionMenuPanel;
     public Button actionButton;
     public TextMeshProUGUI actionText;
+    private AgentMovement selectedColonistMovement;
+    private AgentBrain selectedColonistBrain;
 
-    public Tilemap obstaclesTilemap;
-
-    private MovementController selectedColonist;
-    private Vector3Int selectedTilePos;
     private bool isColonistSelected = false;
+    private bool isRecruited = false;
 
     void Start()
     {
-        // Al empezar, escondemos el menú y configuramos el botón
         actionMenuPanel.SetActive(false);
         actionButton.onClick.AddListener(OnActionButtonClicked);
     }
 
     void Update()
     {
-        if (EventSystem.current.IsPointerOverGameObject())
-        {
-            return;
-        }
+        if (EventSystem.current.IsPointerOverGameObject()) return;
 
-        if (Input.GetMouseButtonDown(0))
-        {
-            HandleLeftClick(); // He corregido el nombre a Handle (Manejar)
-        }
-
-        if (Input.GetMouseButtonDown(1))
-        {
-            HandleRightClick();
-        }
+        if (Input.GetMouseButtonDown(0)) HandleLeftClick();
+        if (Input.GetMouseButtonDown(1)) HandleRightClick();
     }
 
     void HandleLeftClick()
@@ -49,105 +36,83 @@ public class SelectionManager : MonoBehaviour
         Vector2 mousePos2D = new Vector2(mousePos.x, mousePos.y);
 
         RaycastHit2D hit = Physics2D.Raycast(mousePos2D, Vector2.zero);
-        
-        // CORRECCIÓN 1: Quitamos el punto y coma traicionero del final del if
-        // CORRECCIÓN 2: Añadimos () al GetComponent
+
+        // Si hacemos clic en un colono
         if (hit.collider != null && hit.collider.CompareTag("Colono"))
         {
-            SelectColonist(hit.collider.GetComponent<MovementController>());
+            SelectColonist(hit.collider.gameObject);
             return;
         }
 
-        // Si seleccionamos un objeto interactuable
-        Vector3Int cellPos = obstaclesTilemap.WorldToCell(mousePos);
-        
-        // CORRECCIÓN 3: HasTile (no HasTitle)
-        if (obstaclesTilemap.HasTile(cellPos))
-        {
-            SelectTree(cellPos);
-            return;
-        }
-
-        // Si no hay nada para interactuar
+        // Si hacemos clic en el vacío (no en un objeto o colono)
         DeselectAll();
     }
 
     void HandleRightClick()
     {
-        // NOTA: Asegúrate de que en MovementController la variable se llame "isRecruited"
-        if (isColonistSelected && selectedColonist != null && selectedColonist.isRecruited)
+        // Si el colono está reclutado y está seleccionado y hacemos clic derecho, se mueve
+        if (isColonistSelected && isRecruited && selectedColonistMovement != null)
         {
             Vector3 targetPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             targetPos.z = 0;
-            selectedColonist.MoveToPosition(targetPos); // Asegúrate de que este método existe en MovementController
-            Debug.Log("Colono moviéndose a: " + targetPos);
+
+            selectedColonistMovement.MoveTo(targetPos);
+            Debug.Log("[SelectionManager] Colono moviéndose en modo recluta a: " + targetPos);
         }
     }
 
-    void SelectColonist(MovementController colono)
+    void SelectColonist(GameObject colono)
     {
-        selectedColonist = colono;
+        if (UIManager.Instance != null) UIManager.Instance.CloseZoneMenu();
+        selectedColonistMovement = colono.GetComponent<AgentMovement>();
+        selectedColonistBrain = colono.GetComponent<AgentBrain>();
+
         isColonistSelected = true;
-
         actionMenuPanel.SetActive(true);
 
-        // Cambiar texto del botón según estado
-        if (colono.isRecruited)
-            actionText.text = "Licenciar (F)";
-        else
-            actionText.text = "Reclutar (R)";
+        UpdateRecruitButtonText();
     }
 
-    void SelectTree(Vector3Int tilePos)
+    public void DeselectAll()
     {
-        selectedTilePos = tilePos;
         isColonistSelected = false;
-        selectedColonist = null;
-
-        actionMenuPanel.SetActive(true);
-        
-        // CORRECCIÓN 4: Accedemos a la propiedad .text
-        actionText.text = "Talar";
-    }
-
-    void DeselectAll()
-    {
+        selectedColonistMovement = null;
+        selectedColonistBrain = null;
         actionMenuPanel.SetActive(false);
     }
 
     void OnActionButtonClicked()
     {
-        if (isColonistSelected && selectedColonist != null)
+        if (isColonistSelected && selectedColonistBrain != null)
         {
-            selectedColonist.isRecruited = !selectedColonist.isRecruited;
+            isRecruited = !isRecruited;
 
-            if (selectedColonist.isRecruited)
+            if (isRecruited)
             {
-                actionText.text = "Licenciar";
+                // "Apagar" la IA
+                selectedColonistBrain.AbortCurrentAction();
+                selectedColonistBrain.enabled = false;
+                selectedColonistMovement.StopMoving();
             }
             else
             {
-                actionText.text = "Reclutar";
+                // "Encender" la IA
+                selectedColonistBrain.enabled = true;
             }
 
-            Debug.Log("Estado colono cambiado a: " + selectedColonist.isRecruited);
+            UpdateRecruitButtonText();
+        }
+    }
+
+    void UpdateRecruitButtonText()
+    {
+        if (isRecruited)
+        {
+            actionText.text = "Licenciar";
         }
         else
         {
-            MovementController worker = FindFirstObjectByType<MovementController>();
-
-            if (worker != null)
-            {
-                Debug.Log("Enviando al colono a talar en: " + selectedTilePos);
-
-                worker.GoAndChop(selectedTilePos, obstaclesTilemap);
-            }
-            else
-            {
-                Debug.Log("No hay colonos disponibles");
-            }
-
-            actionMenuPanel.SetActive(false);
+            actionText.text = "Reclutar";
         }
     }
 }

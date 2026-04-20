@@ -10,16 +10,18 @@ public class ZoneManager : MonoBehaviour
 
     public TileBase loggingZoneTile;
     public TileBase miningZoneTile;
+    public TileBase harvestingZoneTile;
 
     // Añadir nueva variable de zona si hay un nuevo trabajo con zonas
 
-    public enum ZoneType { None, Logging, Mining }
+    public enum ZoneType { None, Logging, Mining, Harvesting }
     private Dictionary<Vector3Int, ZoneType> gridZones = new Dictionary<Vector3Int, ZoneType>();
     public void MarkZone(BoundsInt area, ZoneType type)
     {
         TileBase tileToDraw = null;
         if (type == ZoneType.Logging) tileToDraw = loggingZoneTile;
         else if (type == ZoneType.Mining) tileToDraw = miningZoneTile;
+        else if (type == ZoneType.Harvesting) tileToDraw = harvestingZoneTile;
 
         foreach (Vector3Int pos in area.allPositionsWithin)
         {
@@ -49,6 +51,10 @@ public class ZoneManager : MonoBehaviour
                     else if (type == ZoneType.Mining && (spriteName.Contains("rock") || spriteName.Contains("ore")))
                     {
                         JobManager.Instance.AddJob(Job.JobType.Minar, pos);
+                    }
+                    else if (type == ZoneType.Harvesting && spriteName.Contains("bush")) 
+                    {
+                        JobManager.Instance.AddJob(Job.JobType.Recolectar, pos);
                     }
 
                     // Añadir else if con nuevo tipo de trabajo usando las zonas si hace falta

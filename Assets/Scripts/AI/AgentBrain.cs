@@ -45,4 +45,17 @@ public class AgentBrain : MonoBehaviour
             }
         }
     }
+
+    // Para forzar la parada de cualquier acción que esté en proceso cuando sea necesario
+    public void AbortCurrentAction()
+    {
+        if (currentAction != null)
+        {
+            StopAllCoroutines();
+
+            currentAction.ResetAction();
+
+            currentAction = null;
+        }
+    }
 }

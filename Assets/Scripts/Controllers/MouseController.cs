@@ -8,11 +8,20 @@ public class MouseController : MonoBehaviour
     public ZoneManager zoneManager;
     public Grid mainGrid;
     public GameObject selectionBoxVisual;
+    private SpriteRenderer selectionRenderer; // Para cambiar el color
 
     private Vector3 startMousePos;
     private bool isDragging = false;
 
     public ZoneManager.ZoneType currentMode = ZoneManager.ZoneType.Logging;
+
+    void Awake()
+    {
+        if (selectionBoxVisual != null)
+        {
+            selectionRenderer = selectionBoxVisual.GetComponent<SpriteRenderer>();
+        }
+    }
 
     void Update()
     {
@@ -28,6 +37,8 @@ public class MouseController : MonoBehaviour
 
             // Activamos el visualizador y lo ponemos en el punto inicial
             selectionBoxVisual.SetActive(true);
+
+            UpdateSelectionColor();
             UpdateSelectionBoxVisual(startMousePos);
         }
 
@@ -46,23 +57,48 @@ public class MouseController : MonoBehaviour
             isDragging = false;
 
             selectionBoxVisual.SetActive(false);
-
             ApplyZone(startMousePos, endMousePos);
+        }
+    }
+
+    void UpdateSelectionColor()
+    {
+        if (selectionRenderer == null) return;
+
+        switch (currentMode)
+        {
+            case ZoneManager.ZoneType.Logging: selectionRenderer.color = new Color(1f, 0.92f, 0.016f, 0.4f); break;
+            case ZoneManager.ZoneType.Mining: selectionRenderer.color = new Color(0f, 1f, 1f, 0.4f); break;
+            case ZoneManager.ZoneType.Harvesting: selectionRenderer.color = new Color(1f, 0f, 1f, 0.4f); break;
+            case ZoneManager.ZoneType.None: selectionRenderer.color = new Color(0.5f, 0.5f, 0.5f, 0.4f); break;
         }
     }
 
     void UpdateSelectionBoxVisual(Vector3 currentMousePos)
     {
-        // 1. Calcular el punto central entre el inicio y el ratón actual
-        Vector3 center = (startMousePos + currentMousePos) / 2f;
+        // Convertir las posiciones del mundo a coordenadas de celda (Int)
+        Vector3Int startCell = mainGrid.WorldToCell(startMousePos);
+        Vector3Int currentCell = mainGrid.WorldToCell(currentMousePos);
 
-        // 2. Calcular el tamaño (ancho y alto) usando valor absoluto
-        float sizeX = Mathf.Abs(startMousePos.x - currentMousePos.x);
-        float sizeY = Mathf.Abs(startMousePos.y - currentMousePos.y);
+        // Calcular los límites de la selección en la rejilla
+        int minX = Mathf.Min(startCell.x, currentCell.x);
+        int maxX = Mathf.Max(startCell.x, currentCell.x);
+        int minY = Mathf.Min(startCell.y, currentCell.y);
+        int maxY = Mathf.Max(startCell.y, currentCell.y);
 
-        // 3. Aplicar posición y escala
-        selectionBoxVisual.transform.position = center;
-        selectionBoxVisual.transform.localScale = new Vector3(sizeX, sizeY, 1);
+        // Calcular la posición del mundo de esas celdas (esquinas)
+        Vector3 minWorld = mainGrid.CellToWorld(new Vector3Int(minX, minY, 0));
+        Vector3 maxWorld = mainGrid.CellToWorld(new Vector3Int(maxX + 1, maxY + 1, 0));
+
+        // Ajustar el visualizador para que encaje perfectamente en la cuadrícula
+        selectionBoxVisual.transform.position = (minWorld + maxWorld) / 2f;
+        selectionBoxVisual.transform.localScale = new Vector3(maxWorld.x - minWorld.x, maxWorld.y - minWorld.y, 1);
+    }
+
+    public void SetMode(ZoneManager.ZoneType newMode)
+    {
+        currentMode = newMode;
+        UpdateSelectionColor(); // Actualizar color al cambiar herramienta
     }
 
     void ApplyZone(Vector3 startWorld, Vector3 endWorld)
@@ -75,14 +111,17 @@ public class MouseController : MonoBehaviour
         int minY = Mathf.Min(startCell.y, endCell.y);
         int maxY = Mathf.Max(startCell.y, endCell.y);
 
-        BoundsInt area = new BoundsInt();
-        area.xMin = minX;
-        area.xMax = maxX + 1;
-        area.yMin = minY;
-        area.yMax = maxY + 1;
-        area.zMin = 0;
-        area.zMax = 1;
-
+        BoundsInt area = new BoundsInt(new Vector3Int(minX, minY, 0), new Vector3Int(maxX - minX + 1, maxY - minY + 1, 1));
         zoneManager.MarkZone(area, currentMode);
+    }
+
+    // Cuando se apaga el script, el cuadro desaparece para que no se quede congelado
+    void OnDisable()
+    {
+        isDragging = false;
+        if (selectionBoxVisual != null)
+        {
+            selectionBoxVisual.SetActive(false);
+        }
     }
 }

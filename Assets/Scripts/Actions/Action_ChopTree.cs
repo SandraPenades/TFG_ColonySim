@@ -147,6 +147,13 @@ public class Action_ChopTree : GoapAction
     // Limpieza: Resetear los valores para la próxima acción
     public override void ResetAction()
     {
+        StopAllCoroutines();
+        
+        if (currentJob != null && currentJob.state == Job.JobState.EnProgreso)
+        {
+            currentJob.state = Job.JobState.Pendiente;
+        }
+
         isDone = false;
         currentJob = null;
     }
