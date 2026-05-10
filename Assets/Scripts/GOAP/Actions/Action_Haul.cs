@@ -12,9 +12,16 @@ public class Action_Haul : GoapAction
     private bool hasStarted = false;
     public LayerMask itemLayer;
 
-    public Action_Haul()
+    protected override void Awake()
     {
+        base.Awake();
+
         actionName = "Transportar recurso";
+
+        // Para el GOAP
+        AddPrecondition("has_loose_resource", true);
+        AddPrecondition("has_storage_available", true);
+        AddEffect("resources_stored", true);
     }
 
     public override bool CheckProceduralPrecondition(GameObject agent)

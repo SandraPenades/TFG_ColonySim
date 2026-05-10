@@ -12,9 +12,13 @@ public class Action_Wander : GoapAction
     public float maxWaitTime = 2f;
     public float funRegenRate = 2f;
 
-    void Awake()
+    protected override void Awake()
     {
+        base.Awake();
+        
         actionName = "Pasear";
+
+        // Para el GOAP
         AddEffect("is_idle", true);
 
         needs = GetComponent<AgentNeeds>();

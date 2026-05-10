@@ -12,22 +12,26 @@ public class Action_Eat : GoapAction
     public GameObject genericItemPrefab;
     private GameObject targetFoodItem;
 
-    void Awake()
+    protected override void Awake()
     {
+        base.Awake();
+        
         actionName = "Comer";
 
-        // Para el GOAP --> Le indicamos que el resultado de esto será quitar hambre
+        // Para el GOAP
+        AddPrecondition("has_food_available", true);
         AddEffect("is_fed", true);
+        AddEffect("is_hungry", false);
 
         needs = GetComponent<AgentNeeds>();
     }
 
     public override bool CheckProceduralPrecondition(GameObject agent)
     {
-        // Si no tiene sueño, no buscamos camas
+        // Si no tiene hambre, no buscamos comida
         if (!needs.IsHungry()) return false;
 
-        // Buscamos todas las cosas etiquetadas como "Bed" en el mapa
+        // Buscamos todos los almacenes del mapa
         GameObject[] foodSources = GameObject.FindGameObjectsWithTag("Storage");
         if (foodSources.Length == 0) return false;
 
@@ -136,7 +140,11 @@ public class Action_Eat : GoapAction
             // Debug.Log($"Ñam ñam.. Comiendo {foodToEat}...");
             yield return new WaitForSeconds(3.0f); // Esto se ajusta después
 
-            if (targetFoodItem != null) Destroy(targetFoodItem);
+            if (targetFoodItem != null)
+            {
+                Destroy(targetFoodItem);
+                targetFoodItem = null;
+            }
             needs.hunger = 100f;
             isDone = true;
         }

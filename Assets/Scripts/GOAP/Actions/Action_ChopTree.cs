@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Tilemaps;
 using NavMeshPlus.Components;
 
-public class Action_Mining : GoapAction
+public class Action_ChopTree : GoapAction
 {
     public bool isDone = false;
     private Job currentJob;
@@ -13,25 +13,30 @@ public class Action_Mining : GoapAction
     private Tilemap obstaclesMap;
     private NavMeshSurface navSurface;
 
-    void Awake()
+    protected override void Awake()
     {
-        actionName = "Minar Roca";
+        base.Awake();
+        
+        actionName = "Talar Árbol";
 
-        // Efecto lógico: Cuando la acción termina, hay piedra disponible
-        AddEffect("has_stone", true);
+        // Para el GOAP
+        AddPrecondition("has_tree_job", true);
+        AddEffect("has_loose_resource", true);
 
         // Buscar el Grid
         mainGrid = FindFirstObjectByType<Grid>();
 
         GameObject obsObj = GameObject.Find("Obstaculos");
         if (obsObj != null) obstaclesMap = obsObj.GetComponent<Tilemap>();
+
+        navSurface = FindFirstObjectByType<NavMeshSurface>();
     }
 
-    // Precondición: Podemos minar?
+    // Precondición: Podemos talar?
     public override bool CheckProceduralPrecondition(GameObject agent)
     {
-        // Que el JobManager indique la piedra más cercana
-        currentJob = JobManager.Instance.GetNextJob(Job.JobType.Minar, agent.transform.position);
+        // Que el JobManager indique el árbol más cercano
+        currentJob = JobManager.Instance.GetNextJob(Job.JobType.Talar, agent.transform.position);
 
         // Si da algo, es true y si no, es false
         return currentJob != null;
@@ -53,25 +58,25 @@ public class Action_Mining : GoapAction
         // Decirle al colono que vaya
         movement.MoveTo(worldPos);
 
-        // Esperar a llegar y minar
-        StartCoroutine(MineRoutine());
+        // Esperar a llegar y talar
+        StartCoroutine(ChopRoutine());
     }
 
     // Corrutina que gestiona el tiempo
-    private IEnumerator MineRoutine()
+    private IEnumerator ChopRoutine()
     {
-        GameObject prefabToSpawn = ResourceManager.Instance.stonePrefab;
+        GameObject prefabToSpawn = ResourceManager.Instance.woodPrefab;
 
         while (!movement.HasReachedDestination())
         {
             yield return null;
         }
 
-        Debug.Log("He llegado a la piedra. Empezando a minar...");
+        Debug.Log("He llegado al árbol. Empezando a talar...");
 
         yield return new WaitForSeconds(3.0f);
 
-        // Borrar la piedra
+        // Borrar el árbol
         if (obstaclesMap != null)
         {
             obstaclesMap.SetTile(currentJob.position, null);
@@ -85,18 +90,18 @@ public class Action_Mining : GoapAction
             navSurface.BuildNavMesh();
         }
 
-        // Spawnear la piedra
+        // Spawnear la madera
         if (prefabToSpawn != null)
         {
-            // Calcular el centro de la casilla de la roca
+            // Calcular el centro de la casilla del árbol
             Vector3Int itemPos = currentJob.position;
             Vector3 spawnPos = mainGrid.GetCellCenterWorld(itemPos);
-            GameObject droppedStone = Instantiate(prefabToSpawn, spawnPos, Quaternion.identity);
+            GameObject droppedWood = Instantiate(prefabToSpawn, spawnPos, Quaternion.identity);
             JobManager.Instance.AddJob(Job.JobType.Transportar, itemPos);
 
             int randomAmount = Random.Range(1, 4);
 
-            ResourceItem itemScript = droppedStone.GetComponent<ResourceItem>();
+            ResourceItem itemScript = droppedWood.GetComponent<ResourceItem>();
             if (itemScript != null)
             {
                 itemScript.SetAmount(randomAmount);
@@ -104,13 +109,13 @@ public class Action_Mining : GoapAction
         }
         else
         {
-            Debug.LogWarning("No asignado el prefab de piedra en el Inspector");
+            Debug.LogWarning("No asignado el prefab de madera en el Inspector");
         }
 
         // Tachar el trabajo de la lista
         JobManager.Instance.pendingJobs.Remove(currentJob);
 
-        Debug.Log("Piedra minada");
+        Debug.Log("Árbol talado");
 
         // Indicar al GOAP que se ha cumplido
         isDone = true;
@@ -123,8 +128,8 @@ public class Action_Mining : GoapAction
     }
 
     // Limpieza: Resetear los valores para la próxima acción
-    public override void ResetAction() 
-    { 
+    public override void ResetAction()
+    {
         StopAllCoroutines();
         
         if (currentJob != null && currentJob.state == Job.JobState.EnProgreso)
@@ -132,7 +137,7 @@ public class Action_Mining : GoapAction
             currentJob.state = Job.JobState.Pendiente;
         }
 
-        isDone = false; 
-        currentJob = null; 
+        isDone = false;
+        currentJob = null;
     }
 }

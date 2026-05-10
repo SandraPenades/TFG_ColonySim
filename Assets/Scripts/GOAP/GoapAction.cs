@@ -12,7 +12,7 @@ public abstract class GoapAction : MonoBehaviour
     public Dictionary<string, bool> preconditions;
     public Dictionary<string, bool> effects;
 
-    public GoapAction()
+    protected virtual void Awake()
     {
         preconditions = new Dictionary<string, bool>();
         effects = new Dictionary<string, bool>();

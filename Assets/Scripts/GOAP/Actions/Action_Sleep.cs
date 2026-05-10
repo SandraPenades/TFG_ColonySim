@@ -11,12 +11,16 @@ public class Action_Sleep : GoapAction
     private AgentNeeds needs;
     private Collider2D agentCollider;
 
-    void Awake()
+    protected override void Awake()
     {
+        base.Awake();
+        
         actionName = "Dormir";
 
-        // Para el GOAP --> Le indicamos que el resultado de esto será quitar sueño
+        // Para el GOAP
+        AddPrecondition("has_free_bed", true);
         AddEffect("is_rested", true);
+        AddEffect("is_sleepy", false);
 
         needs = GetComponent<AgentNeeds>();
     }

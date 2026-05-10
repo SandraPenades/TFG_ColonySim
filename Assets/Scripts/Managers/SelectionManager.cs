@@ -10,11 +10,12 @@ public class SelectionManager : MonoBehaviour
     public GameObject actionMenuPanel;
     public Button actionButton;
     public TextMeshProUGUI actionText;
+
+    private GameObject selectedColonist;
     private AgentMovement selectedColonistMovement;
-    private AgentBrain selectedColonistBrain;
+    private ColonistRecruitment selectedColonistRecruitment;
 
     private bool isColonistSelected = false;
-    private bool isRecruited = false;
 
     void Start()
     {
@@ -44,14 +45,18 @@ public class SelectionManager : MonoBehaviour
             return;
         }
 
-        // Si hacemos clic en el vacío (no en un objeto o colono)
+        // Si hacemos clic en el vacío
         DeselectAll();
     }
 
     void HandleRightClick()
     {
-        // Si el colono está reclutado y está seleccionado y hacemos clic derecho, se mueve
-        if (isColonistSelected && isRecruited && selectedColonistMovement != null)
+        if (!isColonistSelected) return;
+        if (selectedColonistMovement == null) return;
+        if (selectedColonistRecruitment == null) return;
+
+        // Solo se permite mover manualmente si ese colono concreto está reclutado
+        if (selectedColonistRecruitment.IsRecruited)
         {
             Vector3 targetPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             targetPos.z = 0;
@@ -63,9 +68,14 @@ public class SelectionManager : MonoBehaviour
 
     void SelectColonist(GameObject colono)
     {
-        if (UIManager.Instance != null) UIManager.Instance.CloseZoneMenu();
+        if (UIManager.Instance != null) 
+        {
+            UIManager.Instance.CloseZoneMenu();
+        }
+
+        selectedColonist = colono;
         selectedColonistMovement = colono.GetComponent<AgentMovement>();
-        selectedColonistBrain = colono.GetComponent<AgentBrain>();
+        selectedColonistRecruitment = colono.GetComponent<ColonistRecruitment>();
 
         isColonistSelected = true;
         actionMenuPanel.SetActive(true);
@@ -75,44 +85,34 @@ public class SelectionManager : MonoBehaviour
 
     public void DeselectAll()
     {
-        isColonistSelected = false;
+        selectedColonist = null;
         selectedColonistMovement = null;
-        selectedColonistBrain = null;
+        selectedColonistRecruitment = null;
+        
+        isColonistSelected = false;
         actionMenuPanel.SetActive(false);
     }
 
     void OnActionButtonClicked()
     {
-        if (isColonistSelected && selectedColonistBrain != null)
-        {
-            isRecruited = !isRecruited;
+        if (!isColonistSelected) return;
+        if (selectedColonistRecruitment == null) return;
 
-            if (isRecruited)
-            {
-                // "Apagar" la IA
-                selectedColonistBrain.AbortCurrentAction();
-                selectedColonistBrain.enabled = false;
-                selectedColonistMovement.StopMoving();
-            }
-            else
-            {
-                // "Encender" la IA
-                selectedColonistBrain.enabled = true;
-            }
+        selectedColonistRecruitment.ToggleRecruitment();
 
-            UpdateRecruitButtonText();
-        }
+        UpdateRecruitButtonText();
     }
 
     void UpdateRecruitButtonText()
     {
-        if (isRecruited)
-        {
-            actionText.text = "Licenciar";
-        }
-        else
+        if (actionText == null) return;
+
+        if (!isColonistSelected || selectedColonistRecruitment == null)
         {
             actionText.text = "Reclutar";
+            return;
         }
+
+        actionText.text = selectedColonistRecruitment.IsRecruited ? "Licenciar" : "Reclutar";
     }
 }

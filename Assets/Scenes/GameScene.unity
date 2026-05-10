@@ -19030,7 +19030,6 @@ MonoBehaviour:
   prioridadMineria: 2
   prioridadRecoleccion: 3
   prioridadSocializar: 0
-  prioridadBasicos: 0
 --- !u!212 &721673436
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -19909,7 +19908,6 @@ GameObject:
   - component: {fileID: 1854722604}
   - component: {fileID: 1854722603}
   - component: {fileID: 1854722606}
-  - component: {fileID: 1854722607}
   - component: {fileID: 1854722608}
   - component: {fileID: 1854722610}
   - component: {fileID: 1854722611}
@@ -19978,18 +19976,6 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: af7c3f675dc996446a56f4b3a50d6d36, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &1854722607
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1854722602}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3bedef8c48ced7d4c900c52e0e49855e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!114 &1854722608
@@ -20248,7 +20234,6 @@ MonoBehaviour:
   prioridadMineria: 0
   prioridadRecoleccion: 3
   prioridadSocializar: 0
-  prioridadBasicos: 0
 --- !u!114 &1857195369
 MonoBehaviour:
   m_ObjectHideFlags: 0

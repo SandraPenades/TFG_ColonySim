@@ -58,4 +58,17 @@ public class JobManager : MonoBehaviour
 
         return closestJob;
     }
+
+    public bool HasPendingJob(Job.JobType type)
+    {
+        foreach (Job job in pendingJobs)
+        {
+            if (job.type == type && job.state == Job.JobState.Pendiente)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

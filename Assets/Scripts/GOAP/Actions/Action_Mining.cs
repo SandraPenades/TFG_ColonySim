@@ -2,42 +2,46 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using NavMeshPlus.Components;
 
-public class Action_Harvest : GoapAction
+public class Action_Mining : GoapAction
 {
-    // Visuales
-    public TileBase emptyBushTile;
-
     public bool isDone = false;
     private Job currentJob;
     private AgentMovement movement;
     private Grid mainGrid;
     private Tilemap obstaclesMap;
+    private NavMeshSurface navSurface;
 
-    void Awake()
+    protected override void Awake()
     {
-        actionName = "Recolectar Bayas";
+        base.Awake();
 
-        // Efecto lógico: Cuando la acción termina, hay bayas disponibles
-        AddEffect("has_berries", true);
+        actionName = "Minar Roca";
+
+        // Para el GOAP
+        AddPrecondition("has_mining_job", true);
+        AddEffect("has_loose_resource", true);
 
         // Buscar el Grid
         mainGrid = FindFirstObjectByType<Grid>();
+        navSurface = FindFirstObjectByType<NavMeshSurface>();
 
         GameObject obsObj = GameObject.Find("Obstaculos");
         if (obsObj != null) obstaclesMap = obsObj.GetComponent<Tilemap>();
     }
 
-    // Precondición: Podemos recolectar bayas?
+    // Precondición: Podemos minar?
     public override bool CheckProceduralPrecondition(GameObject agent)
     {
-        // Que el JobManager indique el arbusto lleno más cercano
-        currentJob = JobManager.Instance.GetNextJob(Job.JobType.Recolectar, agent.transform.position);
+        // Que el JobManager indique la piedra más cercana
+        currentJob = JobManager.Instance.GetNextJob(Job.JobType.Minar, agent.transform.position);
 
         // Si da algo, es true y si no, es false
         return currentJob != null;
     }
 
+    // Ejecución: El GOAP decide que hagamos esto
     public override void Perform(GameObject agent)
     {
         if (currentJob == null) return;
@@ -53,43 +57,50 @@ public class Action_Harvest : GoapAction
         // Decirle al colono que vaya
         movement.MoveTo(worldPos);
 
-        // Esperar a llegar y recolectar
-        StartCoroutine(HarvestRoutine());
+        // Esperar a llegar y minar
+        StartCoroutine(MineRoutine());
     }
 
-    private IEnumerator HarvestRoutine()
+    // Corrutina que gestiona el tiempo
+    private IEnumerator MineRoutine()
     {
-        GameObject prefabToSpawn = ResourceManager.Instance.berryPrefab;
+        GameObject prefabToSpawn = ResourceManager.Instance.stonePrefab;
 
         while (!movement.HasReachedDestination())
         {
             yield return null;
         }
 
-        Debug.Log("He llegado al arbusto. Empezando a recolectar...");
+        Debug.Log("He llegado a la piedra. Empezando a minar...");
 
-        yield return new WaitForSeconds(1.5f);
+        yield return new WaitForSeconds(3.0f);
 
-        // Cambiar el sprite de con bayas a vacío
-        if (obstaclesMap != null && emptyBushTile != null)
+        // Borrar la piedra
+        if (obstaclesMap != null)
         {
-            obstaclesMap.SetTile(currentJob.position, emptyBushTile);
-
-            // Llama al FloraManager para que el arbusto vuelva a crecer
-            FloraManager.Instance.StartBushRegrowth(currentJob.position);
+            obstaclesMap.SetTile(currentJob.position, null);
         }
 
-        // Spawnear las bayas
+        yield return null;
+
+        // Recalcular el mapa del NavMesh
+        if (navSurface != null)
+        {
+            navSurface.BuildNavMesh();
+        }
+
+        // Spawnear la piedra
         if (prefabToSpawn != null)
         {
+            // Calcular el centro de la casilla de la roca
             Vector3Int itemPos = currentJob.position;
             Vector3 spawnPos = mainGrid.GetCellCenterWorld(itemPos);
-            GameObject droppedBerries = Instantiate(prefabToSpawn, spawnPos, Quaternion.identity);
+            GameObject droppedStone = Instantiate(prefabToSpawn, spawnPos, Quaternion.identity);
             JobManager.Instance.AddJob(Job.JobType.Transportar, itemPos);
 
-            int randomAmount = Random.Range(2, 5);
+            int randomAmount = Random.Range(1, 4);
 
-            ResourceItem itemScript = droppedBerries.GetComponent<ResourceItem>();
+            ResourceItem itemScript = droppedStone.GetComponent<ResourceItem>();
             if (itemScript != null)
             {
                 itemScript.SetAmount(randomAmount);
@@ -97,19 +108,25 @@ public class Action_Harvest : GoapAction
         }
         else
         {
-            Debug.LogWarning("No asignado el prefab de bayas en el ResourceManager");
+            Debug.LogWarning("No asignado el prefab de piedra en el Inspector");
         }
 
         // Tachar el trabajo de la lista
         JobManager.Instance.pendingJobs.Remove(currentJob);
-        Debug.Log("Bayas recolectadas");
+
+        Debug.Log("Piedra minada");
+
+        // Indicar al GOAP que se ha cumplido
         isDone = true;
     }
 
+    // Estado: El GOAP pregunta si ya está acabado
     public override bool IsDone()
     {
         return isDone;
     }
+
+    // Limpieza: Resetear los valores para la próxima acción
     public override void ResetAction() 
     { 
         StopAllCoroutines();
