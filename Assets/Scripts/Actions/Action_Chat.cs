@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class AgentController : MonoBehaviour
+public class Action_Chat : MonoBehaviour
 {
     // Start is called before the first frame update
     void Start()

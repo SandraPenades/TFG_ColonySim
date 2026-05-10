@@ -11,9 +11,10 @@ GameObject:
   - component: {fileID: 842973280218090019}
   - component: {fileID: 5902245502969254038}
   - component: {fileID: 1657812951670033785}
-  m_Layer: 0
+  - component: {fileID: -2743671639718649461}
+  m_Layer: 6
   m_Name: Item_Berry_Prefab
-  m_TagString: Untagged
+  m_TagString: Item
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -100,6 +101,42 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   amount: 1
   amountText: {fileID: 4015848441773495968}
+  itemID: Baya
+--- !u!58 &-2743671639718649461
+CircleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2809222737991278840}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0, y: 0}
+  serializedVersion: 2
+  m_Radius: 0.50000006
 --- !u!1 &8174553511687694643
 GameObject:
   m_ObjectHideFlags: 0
@@ -111,7 +148,7 @@ GameObject:
   - component: {fileID: 5825406579132471932}
   - component: {fileID: 6745841684317340228}
   - component: {fileID: 4015848441773495968}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: AmountText
   m_TagString: Untagged
   m_Icon: {fileID: 0}

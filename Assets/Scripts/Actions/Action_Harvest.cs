@@ -17,7 +17,6 @@ public class Action_Harvest : GoapAction
     void Awake()
     {
         actionName = "Recolectar Bayas";
-        cost = 2f;
 
         // Efecto lógico: Cuando la acción termina, hay bayas disponibles
         AddEffect("has_berries", true);
@@ -32,27 +31,10 @@ public class Action_Harvest : GoapAction
     // Precondición: Podemos recolectar bayas?
     public override bool CheckProceduralPrecondition(GameObject agent)
     {
-        currentJob = null;
-        Job closestJob = null;
-        float shortestDistance = Mathf.Infinity;
+        // Que el JobManager indique el arbusto lleno más cercano
+        currentJob = JobManager.Instance.GetNextJob(Job.JobType.Recolectar, agent.transform.position);
 
-        // Buscamos en la lista de trabajos en JobManager si hay orden de recolectar bayas
-        foreach (Job job in JobManager.Instance.pendingJobs)
-        {
-            if (job.type == Job.JobType.Recolectar && job.state == Job.JobState.Pendiente)
-            {
-                Vector3 jobWorldPos = mainGrid.GetCellCenterWorld(job.position);
-                float distance = Vector3.Distance(agent.transform.position, jobWorldPos);
-                
-                if (distance < shortestDistance)
-                {
-                    shortestDistance = distance; 
-                    closestJob = job;
-                }
-            }
-        }
-
-        currentJob = closestJob;
+        // Si da algo, es true y si no, es false
         return currentJob != null;
     }
 
@@ -60,11 +42,18 @@ public class Action_Harvest : GoapAction
     {
         if (currentJob == null) return;
 
+        // Marcar como en progreso para que no hayan 2 colonos con el mismo trabajo
         currentJob.state = Job.JobState.EnProgreso;
+
         movement = agent.GetComponent<AgentMovement>();
+
+        // Convertir las coordenadas a la posición del mundo real
         Vector3 worldPos = mainGrid.GetCellCenterWorld(currentJob.position);
+
+        // Decirle al colono que vaya
         movement.MoveTo(worldPos);
 
+        // Esperar a llegar y recolectar
         StartCoroutine(HarvestRoutine());
     }
 
@@ -93,8 +82,10 @@ public class Action_Harvest : GoapAction
         // Spawnear las bayas
         if (prefabToSpawn != null)
         {
-            Vector3 spawnPos = mainGrid.GetCellCenterWorld(currentJob.position);
+            Vector3Int itemPos = currentJob.position;
+            Vector3 spawnPos = mainGrid.GetCellCenterWorld(itemPos);
             GameObject droppedBerries = Instantiate(prefabToSpawn, spawnPos, Quaternion.identity);
+            JobManager.Instance.AddJob(Job.JobType.Transportar, itemPos);
 
             int randomAmount = Random.Range(2, 5);
 

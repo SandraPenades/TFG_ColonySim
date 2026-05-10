@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class WorkTabUI : MonoBehaviour
+public class Action_Basic : MonoBehaviour
 {
     // Start is called before the first frame update
     void Start()

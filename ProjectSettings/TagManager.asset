@@ -8,14 +8,15 @@ TagManager:
   - Interactuable
   - Bed
   - Storage
+  - Item
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Colonists
   - Water
   - UI
-  - 
+  - Items
   - 
   - 
   - 

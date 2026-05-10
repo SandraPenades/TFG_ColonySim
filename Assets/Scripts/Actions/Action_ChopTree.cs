@@ -16,7 +16,6 @@ public class Action_ChopTree : GoapAction
     void Awake()
     {
         actionName = "Talar Árbol";
-        cost = 2f;
 
         // Efecto lógico: Cuando la acción termina, hay madera disponible
         AddEffect("has_wood", true);
@@ -33,31 +32,10 @@ public class Action_ChopTree : GoapAction
     // Precondición: Podemos talar?
     public override bool CheckProceduralPrecondition(GameObject agent)
     {
-        currentJob = null;
-        Job closestJob = null;
-        float shortestDistance = Mathf.Infinity;
+        // Que el JobManager indique el árbol más cercano
+        currentJob = JobManager.Instance.GetNextJob(Job.JobType.Talar, agent.transform.position);
 
-        // Buscamos en la lista de trabajos en JobManager si hay orden de tala
-        foreach (Job job in JobManager.Instance.pendingJobs)
-        {
-            if (job.type == Job.JobType.Talar && job.state == Job.JobState.Pendiente)
-            {
-                // 1. Dónde está el árbol en el mundo real
-                Vector3 jobWorldPos = mainGrid.GetCellCenterWorld(job.position);
-                
-                // 2. Medimos la distancia en línea recta desde Pepe hasta el árbol
-                float distance = Vector3.Distance(agent.transform.position, jobWorldPos);
-
-                // 3. Si esta distancia es más pequeña que la que teníamos guardada...
-                if (distance < shortestDistance)
-                {
-                    shortestDistance = distance; // Actualizamos el récord de cercanía
-                    closestJob = job;            // Este es nuestro nuevo candidato favorito
-                }
-            }
-        }
-
-        currentJob = closestJob;
+        // Si da algo, es true y si no, es false
         return currentJob != null;
     }
 
@@ -113,8 +91,10 @@ public class Action_ChopTree : GoapAction
         if (prefabToSpawn != null)
         {
             // Calcular el centro de la casilla del árbol
-            Vector3 spawnPos = mainGrid.GetCellCenterWorld(currentJob.position);
+            Vector3Int itemPos = currentJob.position;
+            Vector3 spawnPos = mainGrid.GetCellCenterWorld(itemPos);
             GameObject droppedWood = Instantiate(prefabToSpawn, spawnPos, Quaternion.identity);
+            JobManager.Instance.AddJob(Job.JobType.Transportar, itemPos);
 
             int randomAmount = Random.Range(1, 4);
 

@@ -5,9 +5,14 @@ using TMPro;
 
 public class ResourceItem : MonoBehaviour
 {
+    // Cantidad
     public int amount = 1;
 
+    // Componente del texto para la cantidad
     public TextMeshPro amountText;
+
+    // Nombre del item
+    public string itemID;
 
     public void SetAmount(int newAmount)
     {

@@ -5,6 +5,8 @@ using UnityEngine;
 public abstract class GoapAction : MonoBehaviour
 {
     public string actionName = "Accion_Base";
+    
+    [HideInInspector]
     public float cost = 1f; // Tiempo de la acción
 
     public Dictionary<string, bool> preconditions;

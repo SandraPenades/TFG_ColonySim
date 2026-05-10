@@ -5,6 +5,8 @@ using UnityEngine.Tilemaps;
 
 public class ZoneManager : MonoBehaviour
 {
+    public static ZoneManager Instance;
+
     public Tilemap zoneTilemap;
     public Tilemap obstaclesTilemap; // Para comprobar si hay árboles
 
@@ -16,6 +18,13 @@ public class ZoneManager : MonoBehaviour
 
     public enum ZoneType { None, Logging, Mining, Harvesting }
     private Dictionary<Vector3Int, ZoneType> gridZones = new Dictionary<Vector3Int, ZoneType>();
+    
+    void Awake()
+    {
+        if (Instance == null) Instance = this;
+        else Destroy(gameObject);
+    }
+
     public void MarkZone(BoundsInt area, ZoneType type)
     {
         TileBase tileToDraw = null;
@@ -39,6 +48,7 @@ public class ZoneManager : MonoBehaviour
 
                 // Crear trabajo si hay un recurso
                 Sprite tileSprite = obstaclesTilemap.GetSprite(pos);
+                TileBase currentTile = obstaclesTilemap.GetTile(pos);
 
                 if (tileSprite != null)
                 {
@@ -52,7 +62,7 @@ public class ZoneManager : MonoBehaviour
                     {
                         JobManager.Instance.AddJob(Job.JobType.Minar, pos);
                     }
-                    else if (type == ZoneType.Harvesting && spriteName.Contains("bush")) 
+                    else if (type == ZoneType.Harvesting && currentTile == FloraManager.Instance.fullBushTile) 
                     {
                         JobManager.Instance.AddJob(Job.JobType.Recolectar, pos);
                     }
@@ -63,5 +73,26 @@ public class ZoneManager : MonoBehaviour
         }
 
         Debug.Log($"Zona {type} aplicada. Total de casillas registradas: {gridZones.Count}");
+    }
+
+    public void UpdateJobAtPosition(Vector3Int pos)
+    {
+        // Se mira si la casilla tiene asignada una zona
+        if (gridZones.ContainsKey(pos))
+        {
+            ZoneType type = gridZones[pos];
+            Sprite tileSprite = obstaclesTilemap.GetSprite(pos);
+            TileBase currentTile = obstaclesTilemap.GetTile(pos);
+
+            if (tileSprite == null || currentTile == null) return;
+
+            string spriteName = tileSprite.name.ToLower();
+
+            // Si la zona es de recolección y el arbusto ha crecido
+            if (type == ZoneType.Harvesting && currentTile == FloraManager.Instance.fullBushTile)
+            {
+                JobManager.Instance.AddJob(Job.JobType.Recolectar, pos);
+            }
+        }
     }
 }

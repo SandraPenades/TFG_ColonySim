@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 13312, guid: 0000000000000000e000000000000000, type: 0}
-  m_Name: arbusto
+  m_Name: Bush_Empty
   m_EditorClassIdentifier: 
   m_Sprite: {fileID: 21300000, guid: 850ad26d63c024a4c96cac97b021e75e, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}

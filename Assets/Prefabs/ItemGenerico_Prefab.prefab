@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 1474400461061806998}
   - component: {fileID: -855544081758266768}
   m_Layer: 6
-  m_Name: Item_Wood_Prefab
+  m_Name: ItemGenerico_Prefab
   m_TagString: Item
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

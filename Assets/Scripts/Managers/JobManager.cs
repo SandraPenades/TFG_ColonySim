@@ -33,6 +33,29 @@ public class JobManager : MonoBehaviour
         Job newJob = new Job(type, position);
         pendingJobs.Add(newJob);
 
-        Debug.Log($"[JobManager] Nuevo trabajo: {type} en {position}. Total en cola: {pendingJobs.Count}");
+        //Debug.Log($"[JobManager] Nuevo trabajo: {type} en {position}. Total en cola: {pendingJobs.Count}");
+    }
+
+    public Job GetNextJob(Job.JobType type, Vector3 agentPosition)
+    {
+        Job closestJob = null;
+        float closestDistance = Mathf.Infinity;
+
+        // Buscamos en todos los trabajos pendientes
+        foreach (Job job in pendingJobs)
+        {
+            if (job.state == Job.JobState.Pendiente && job.type == type)
+            {
+                // Calculamos cuál está más cerca del colono
+                float distance = Vector3.Distance(agentPosition, job.position);
+                if (distance < closestDistance)
+                {
+                    closestDistance = distance;
+                    closestJob = job;
+                }
+            }
+        }
+
+        return closestJob;
     }
 }
