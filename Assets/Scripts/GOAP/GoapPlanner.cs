@@ -21,17 +21,9 @@ public class GoapPlanner
         }
     }
 
-    public Queue<GoapAction> Plan (GameObject agent, List<GoapAction> availableActions, WorldState currentState, GoapGoal goal)
+    public Queue<GoapAction> Plan(GameObject agent, List<GoapAction> availableActions, WorldState currentState, GoapGoal goal)
     {
-        List<GoapAction> usableActions = new List<GoapAction>();
-
-        foreach (GoapAction action in availableActions)
-        {
-            if (action.CheckProceduralPrecondition(agent))
-            {
-                usableActions.Add(action);
-            }
-        }
+        List<GoapAction> usableActions = availableActions.Where(action => action.cost > 0).ToList();
 
         List<Node> leaves = new List<Node>();
 
@@ -80,7 +72,7 @@ public class GoapPlanner
         return queue;
     }
 
-    private bool BuildGraph (Node parent, List<Node> leaves, List<GoapAction> usableActions, Dictionary<string, bool> goal)
+    private bool BuildGraph(Node parent, List<Node> leaves, List<GoapAction> usableActions, Dictionary<string, bool> goal)
     {
         bool foundPath = false;
 
