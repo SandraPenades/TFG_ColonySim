@@ -21,7 +21,8 @@ public class Action_ChopTree : GoapAction
 
         // Para el GOAP
         AddPrecondition("has_tree_job", true);
-        AddEffect("has_loose_resource", true);
+        AddEffect("has_loose_resource", true); // Para la acción genérica de transportar
+        AddEffect("has_loose_wood", true); // Si hace falta madera específicamente
 
         // Buscar el Grid
         mainGrid = FindFirstObjectByType<Grid>();
@@ -97,7 +98,6 @@ public class Action_ChopTree : GoapAction
             Vector3Int itemPos = currentJob.position;
             Vector3 spawnPos = mainGrid.GetCellCenterWorld(itemPos);
             GameObject droppedWood = Instantiate(prefabToSpawn, spawnPos, Quaternion.identity);
-            JobManager.Instance.AddJob(Job.JobType.Transportar, itemPos);
 
             int randomAmount = Random.Range(1, 4);
 
@@ -105,6 +105,7 @@ public class Action_ChopTree : GoapAction
             if (itemScript != null)
             {
                 itemScript.SetAmount(randomAmount);
+                JobManager.Instance.AddJob(Job.JobType.Transportar, itemPos, itemScript.itemID);
             }
         }
         else

@@ -17,56 +17,67 @@ public class JobManager : MonoBehaviour
         else Destroy(gameObject);
     }
 
-    public void AddJob(Job.JobType type, Vector3Int position)
+    public void AddJob(Job.JobType type, Vector3Int position, string itemID = "")
     {
         // Para evitar duplicados
         foreach (Job existingJob in pendingJobs)
         {
             // Si el trabajo ya existe, se ignora
-            if (existingJob.position == position && existingJob.type == type)
+            if (existingJob.position == position && existingJob.type == type && existingJob.itemID == itemID && existingJob.state != Job.JobState.Completado)
             {
                 return;
             }
         }
 
         // Crear el trabajo y guardarlo
-        Job newJob = new Job(type, position);
+        Job newJob = new Job(type, position, itemID);
         pendingJobs.Add(newJob);
 
         //Debug.Log($"[JobManager] Nuevo trabajo: {type} en {position}. Total en cola: {pendingJobs.Count}");
     }
 
-    public Job GetNextJob(Job.JobType type, Vector3 agentPosition)
+    public Job GetNextJob(Job.JobType type, Vector3 agentPosition, string requiredItemID = "")
     {
         Job closestJob = null;
         float closestDistance = Mathf.Infinity;
 
-        // Buscamos en todos los trabajos pendientes
         foreach (Job job in pendingJobs)
         {
-            if (job.state == Job.JobState.Pendiente && job.type == type)
+            if (job.state != Job.JobState.Pendiente) continue;
+            if (job.type != type) continue;
+
+            // Si se pide un item concreto, ignora trabajos de otro item.
+            // Si requiredItemID está vacío, acepta cualquier item.
+            if (!string.IsNullOrEmpty(requiredItemID) && job.itemID != requiredItemID)
             {
-                // Calculamos cuál está más cerca del colono
-                float distance = Vector3.Distance(agentPosition, job.position);
-                if (distance < closestDistance)
-                {
-                    closestDistance = distance;
-                    closestJob = job;
-                }
+                continue;
+            }
+
+            float distance = Vector3.Distance(agentPosition, job.position);
+
+            if (distance < closestDistance)
+            {
+                closestDistance = distance;
+                closestJob = job;
             }
         }
 
         return closestJob;
     }
 
-    public bool HasPendingJob(Job.JobType type)
+    public bool HasPendingJob(Job.JobType type, string requiredItemID = "")
     {
         foreach (Job job in pendingJobs)
         {
-            if (job.type == type && job.state == Job.JobState.Pendiente)
+            if (job.type != type) continue;
+            if (job.state != Job.JobState.Pendiente) continue;
+
+            if (!string.IsNullOrEmpty(requiredItemID) && job.itemID != requiredItemID)
             {
-                return true;
+                continue;
             }
+
+            return true;
         }
 
         return false;

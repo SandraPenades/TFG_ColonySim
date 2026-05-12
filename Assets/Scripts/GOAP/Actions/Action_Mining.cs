@@ -21,7 +21,8 @@ public class Action_Mining : GoapAction
 
         // Para el GOAP
         AddPrecondition("has_mining_job", true);
-        AddEffect("has_loose_resource", true);
+        AddEffect("has_loose_resource", true); // Para la acción genérica de transportar
+        AddEffect("has_loose_stone", true); // Si hace falta piedra específicamente
 
         // Buscar el Grid
         mainGrid = FindFirstObjectByType<Grid>();
@@ -96,7 +97,6 @@ public class Action_Mining : GoapAction
             Vector3Int itemPos = currentJob.position;
             Vector3 spawnPos = mainGrid.GetCellCenterWorld(itemPos);
             GameObject droppedStone = Instantiate(prefabToSpawn, spawnPos, Quaternion.identity);
-            JobManager.Instance.AddJob(Job.JobType.Transportar, itemPos);
 
             int randomAmount = Random.Range(1, 4);
 
@@ -104,6 +104,7 @@ public class Action_Mining : GoapAction
             if (itemScript != null)
             {
                 itemScript.SetAmount(randomAmount);
+                JobManager.Instance.AddJob(Job.JobType.Transportar, itemPos, itemScript.itemID);
             }
         }
         else

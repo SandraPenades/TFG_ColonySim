@@ -33,23 +33,31 @@ public class Action_Haul : GoapAction
             Vector2 searchPos = new Vector2(currentJob.position.x, currentJob.position.y);
             
             // Este radar atravesará al colono y chocará con los Items.
-            Collider2D hit = Physics2D.OverlapCircle(searchPos, 1.5f, itemLayer);
-            
-            if (hit != null)
+            Collider2D[] hits = Physics2D.OverlapCircleAll(searchPos, 1.5f, itemLayer);
+            targetStorage = FindObjectOfType<StorageBuilding>();
+
+            if (targetStorage == null) return false;
+
+            foreach (Collider2D hit in hits)
             {
                 ResourceItem itemData = hit.GetComponent<ResourceItem>();
-                targetItem = hit.gameObject;
-                targetStorage = FindObjectOfType<StorageBuilding>();
 
-                if (targetStorage != null && itemData != null)
+                if (itemData == null) continue;
+
+                // Si el trabajo especifica un itemID y este ítem no coincide, lo ignoramos.
+                if (!string.IsNullOrEmpty(currentJob.itemID) && itemData.itemID != currentJob.itemID)
                 {
-                    if (targetStorage.CanAcceptItem(itemData.itemID))
-                    {
-                        targetItem = hit.gameObject;
-                        targetPosition = currentJob.position;
-                        return true;
-                    }
+                    continue;
                 }
+
+                // Si el almacén acepta este tipo de ítem, lo usamos como objetivo.
+                if (targetStorage.CanAcceptItem(itemData.itemID))
+                {
+                    targetItem = hit.gameObject;
+                    targetPosition = currentJob.position;
+                    return true;
+                }
+
             }
         }
         return false;
@@ -128,7 +136,14 @@ public class Action_Haul : GoapAction
             targetStorage.AddItem(itemName, itemData.amount);
 
             Destroy(targetItem);
-            if (currentJob != null) currentJob.state = Job.JobState.Completado;
+            targetItem = null;
+
+            if (currentJob != null) 
+            {
+                currentJob.state = Job.JobState.Completado;
+                JobManager.Instance.pendingJobs.Remove(currentJob);
+                currentJob = null;
+            }
         }
         else
         {
@@ -145,7 +160,7 @@ public class Action_Haul : GoapAction
 
         if (targetItem != null)
         {
-            if (targetItem.transform.parent == transform || targetItem.transform.parent != null)
+            if (targetItem.transform.parent != null)
             {
                 targetItem.transform.SetParent(null); // Para soltarlo en el mapa
 
@@ -171,6 +186,8 @@ public class Action_Haul : GoapAction
         }
 
         targetItem = null;
+        targetStorage = null;
+        currentJob = null;
         isDone = false;
         hasStarted = false;
     }

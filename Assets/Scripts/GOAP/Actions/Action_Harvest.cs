@@ -22,8 +22,8 @@ public class Action_Harvest : GoapAction
 
         // Para el GOAP
         AddPrecondition("has_harvest_job", true);
-        AddEffect("has_loose_resource", true);
-        AddEffect("has_loose_food", true);
+        AddEffect("has_loose_resource", true); // Para la acción genérica de transportar
+        AddEffect("has_loose_food", true); // Si hace falta comida específicamente
 
         // Buscar el Grid
         mainGrid = FindFirstObjectByType<Grid>();
@@ -89,7 +89,6 @@ public class Action_Harvest : GoapAction
             Vector3Int itemPos = currentJob.position;
             Vector3 spawnPos = mainGrid.GetCellCenterWorld(itemPos);
             GameObject droppedBerries = Instantiate(prefabToSpawn, spawnPos, Quaternion.identity);
-            JobManager.Instance.AddJob(Job.JobType.Transportar, itemPos);
 
             int randomAmount = Random.Range(2, 5);
 
@@ -97,6 +96,7 @@ public class Action_Harvest : GoapAction
             if (itemScript != null)
             {
                 itemScript.SetAmount(randomAmount);
+                JobManager.Instance.AddJob(Job.JobType.Transportar, itemPos, itemScript.itemID);
             }
         }
         else

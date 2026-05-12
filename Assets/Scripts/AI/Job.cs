@@ -14,10 +14,13 @@ public class Job
     public JobState state;
     public Vector3Int position;
 
-    public Job(JobType type, Vector3Int position)
+    public string itemID;
+
+    public Job(JobType type, Vector3Int position, string itemID = "")
     {
         this.type = type;
         this.position = position;
+        this.itemID = itemID;
         this.state = JobState.Pendiente; // Por defecto
     }
 }

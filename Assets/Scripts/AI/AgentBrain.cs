@@ -139,8 +139,8 @@ public class AgentBrain : MonoBehaviour
         if (currentState.GetState("has_tree_job") && prioridadTala > 0)
         {
             goals.Add(new GoapGoal(
-                "Obtener madera", 
-                new Dictionary<string, bool> { { "has_loose_resource", true } }, 
+                "Talar y almacenar madera", 
+                new Dictionary<string, bool> { { "resources_stored", true } }, 
                 prioridadTala + 3
             ));
         }
@@ -148,18 +148,17 @@ public class AgentBrain : MonoBehaviour
         if (currentState.GetState("has_mining_job") && prioridadMineria > 0)
         {
             goals.Add(new GoapGoal(
-                "Obtener piedra", 
-                new Dictionary<string, bool> { { "has_loose_resource", true } }, 
+                "Minar y almacenar piedra", 
+                new Dictionary<string, bool> { { "resources_stored", true } }, 
                 prioridadMineria + 3
             ));
         }
 
-        // No hace falta poner también que genera un item en el suelo, solo que hace comida para el planner.
         if (currentState.GetState("has_harvest_job") && prioridadRecoleccion > 0)
         {
             goals.Add(new GoapGoal(
-                "Recolectar comida", 
-                new Dictionary<string, bool> { { "has_loose_food", true }, { "has_loose_resource", true } }, 
+                "Recolectar y almacenar comida", 
+                new Dictionary<string, bool> { { "resources_stored", true } }, 
                 prioridadMineria + 3
             ));
         }
