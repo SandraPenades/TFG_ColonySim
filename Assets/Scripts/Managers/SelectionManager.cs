@@ -10,6 +10,7 @@ public class SelectionManager : MonoBehaviour
     public GameObject actionMenuPanel;
     public Button actionButton;
     public TextMeshProUGUI actionText;
+    public ColonistInfoPanel colonistInfoPanel;
 
     private GameObject selectedColonist;
     private AgentMovement selectedColonistMovement;
@@ -81,6 +82,11 @@ public class SelectionManager : MonoBehaviour
         actionMenuPanel.SetActive(true);
 
         UpdateRecruitButtonText();
+
+        if (colonistInfoPanel != null)
+        {
+            colonistInfoPanel.SetColonist(colono);
+        }
     }
 
     public void DeselectAll()
@@ -91,6 +97,11 @@ public class SelectionManager : MonoBehaviour
         
         isColonistSelected = false;
         actionMenuPanel.SetActive(false);
+
+        if (colonistInfoPanel != null)
+        {
+            colonistInfoPanel.ClearPanel();
+        }
     }
 
     void OnActionButtonClicked()

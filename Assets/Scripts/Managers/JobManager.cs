@@ -82,4 +82,19 @@ public class JobManager : MonoBehaviour
 
         return false;
     }
+
+    public int CountPendingJobs(Job.JobType type)
+    {
+        int count = 0;
+
+        foreach (Job job in pendingJobs)
+        {
+            if (job.type == type && job.state == Job.JobState.Pendiente)
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
 }

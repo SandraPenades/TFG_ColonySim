@@ -140,7 +140,7 @@ public class AgentBrain : MonoBehaviour
         {
             goals.Add(new GoapGoal(
                 "Talar y almacenar madera", 
-                new Dictionary<string, bool> { { "resources_stored", true } }, 
+                new Dictionary<string, bool> { {"has_loose_wood", true},  { "resources_stored", true } }, 
                 prioridadTala + 3
             ));
         }
@@ -149,7 +149,7 @@ public class AgentBrain : MonoBehaviour
         {
             goals.Add(new GoapGoal(
                 "Minar y almacenar piedra", 
-                new Dictionary<string, bool> { { "resources_stored", true } }, 
+                new Dictionary<string, bool> { {"has_loose_stone", true},  { "resources_stored", true } }, 
                 prioridadMineria + 3
             ));
         }
@@ -158,8 +158,8 @@ public class AgentBrain : MonoBehaviour
         {
             goals.Add(new GoapGoal(
                 "Recolectar y almacenar comida", 
-                new Dictionary<string, bool> { { "resources_stored", true } }, 
-                prioridadMineria + 3
+                new Dictionary<string, bool> { {"has_loose_food", true}, { "resources_stored", true } }, 
+                prioridadRecoleccion + 3
             ));
         }
 
@@ -181,6 +181,13 @@ public class AgentBrain : MonoBehaviour
         //         prioridadDivertirse + 2
         //     ));
         // }
+
+        Debug.Log(
+            $"[Jobs] Tala:{JobManager.Instance.CountPendingJobs(Job.JobType.Talar)} " +
+            $"Minería:{JobManager.Instance.CountPendingJobs(Job.JobType.Minar)} " +
+            $"Recolección:{JobManager.Instance.CountPendingJobs(Job.JobType.Recolectar)} " +
+            $"Transporte:{JobManager.Instance.CountPendingJobs(Job.JobType.Transportar)}"
+        );
 
         return goals;
 
