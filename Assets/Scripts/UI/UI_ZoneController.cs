@@ -24,10 +24,4 @@ public class UI_ZoneSelector : MonoBehaviour
         mouseController.SetMode(ZoneManager.ZoneType.Harvesting);
         mouseController.enabled = true;
     }
-
-    public void SelectEraserTool()
-    {
-        mouseController.SetMode(ZoneManager.ZoneType.None);
-        mouseController.enabled = true;
-    }
 }

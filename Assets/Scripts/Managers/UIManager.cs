@@ -22,6 +22,11 @@ public class UIManager : MonoBehaviour
         // Que el panel empiece oculto
         if (zoneMenuPanel != null) zoneMenuPanel.SetActive(false);
         if (mouseController != null) mouseController.enabled = false;
+
+        if (ZoneManager.Instance != null)
+        {
+            ZoneManager.Instance.HideAllZones();
+        }
     }
 
     public void ToggleZoneMenu()
@@ -42,9 +47,15 @@ public class UIManager : MonoBehaviour
         zoneMenuPanel.SetActive(newState);
 
         // Activar/Desactivar la lógica del ratón para zonear
-        if (!newState && mouseController != null)
+        if (mouseController != null)
         {
-            mouseController.enabled = false;
+            mouseController.enabled = newState;
+        }
+
+        // Si se cierra el menú, ocultar todas las zonas
+        if (!newState && ZoneManager.Instance != null)
+        {
+            ZoneManager.Instance.HideAllZones();
         }
     }
 
@@ -52,5 +63,10 @@ public class UIManager : MonoBehaviour
     {
         if (zoneMenuPanel != null) zoneMenuPanel.SetActive(false);
         if (mouseController != null) mouseController.enabled = false;
+
+        if (ZoneManager.Instance != null)
+        {
+            ZoneManager.Instance.HideAllZones();
+        }
     }
 }

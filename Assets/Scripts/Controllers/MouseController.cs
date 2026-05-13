@@ -12,6 +12,7 @@ public class MouseController : MonoBehaviour
 
     private Vector3 startMousePos;
     private bool isDragging = false;
+    private bool isErasing = false;
 
     public ZoneManager.ZoneType currentMode = ZoneManager.ZoneType.Logging;
 
@@ -28,18 +29,16 @@ public class MouseController : MonoBehaviour
         // Si se toca la UI, no se modifica el mapa
         if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
 
-        // Cuando se hace clic, se guarda el punto de inicio
+        // Clic izquierdo: crear zona
         if (Input.GetMouseButtonDown(0))
         {
-            startMousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            startMousePos.z = 0;
-            isDragging = true;
+            StartAreaSelection(false);
+        }
 
-            // Activamos el visualizador y lo ponemos en el punto inicial
-            selectionBoxVisual.SetActive(true);
-
-            UpdateSelectionColor();
-            UpdateSelectionBoxVisual(startMousePos);
+        // Clic derecho: borrar zona
+        if (Input.GetMouseButtonDown(1))
+        {
+            StartAreaSelection(true);
         }
 
         if (isDragging)
@@ -49,29 +48,83 @@ public class MouseController : MonoBehaviour
             UpdateSelectionBoxVisual(currentMousePos);
         }
 
-        // Al soltar el clic, se calcula el recuadro final del área
-        if (Input.GetMouseButtonUp(0) && isDragging)
+        // Soltar clic izquierdo
+        if (Input.GetMouseButtonUp(0) && isDragging && !isErasing)
         {
-            Vector3 endMousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            endMousePos.z = 0;
-            isDragging = false;
-
-            selectionBoxVisual.SetActive(false);
-            ApplyZone(startMousePos, endMousePos);
+            FinishAreaSelection();
         }
+
+        // Soltar clic derecho
+        if (Input.GetMouseButtonUp(1) && isDragging && isErasing)
+        {
+            FinishAreaSelection();
+        }
+    }
+
+    private void StartAreaSelection(bool eraseMode)
+    {
+        if (currentMode == ZoneManager.ZoneType.None) return;
+
+        startMousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        startMousePos.z = 0;
+
+        isDragging = true;
+        isErasing = eraseMode;
+
+        if (selectionBoxVisual != null)
+        {
+            selectionBoxVisual.SetActive(true);
+        }
+
+        UpdateSelectionColor();
+        UpdateSelectionBoxVisual(startMousePos);
+    }
+
+    private void FinishAreaSelection()
+    {
+        Vector3 endMousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        endMousePos.z = 0;
+
+        isDragging = false;
+
+        if (selectionBoxVisual != null)
+        {
+            selectionBoxVisual.SetActive(false);
+        }
+
+        ApplyZone(startMousePos, endMousePos, isErasing);
+
+        isErasing = false;
     }
 
     void UpdateSelectionColor()
     {
         if (selectionRenderer == null) return;
 
+        Color color;
+
         switch (currentMode)
         {
-            case ZoneManager.ZoneType.Logging: selectionRenderer.color = new Color(1f, 0.92f, 0.016f, 0.4f); break;
-            case ZoneManager.ZoneType.Mining: selectionRenderer.color = new Color(0f, 1f, 1f, 0.4f); break;
-            case ZoneManager.ZoneType.Harvesting: selectionRenderer.color = new Color(1f, 0f, 1f, 0.4f); break;
-            case ZoneManager.ZoneType.None: selectionRenderer.color = new Color(0.5f, 0.5f, 0.5f, 0.4f); break;
+            case ZoneManager.ZoneType.Logging: 
+                color = new Color(1f, 0.92f, 0.016f, 0.4f); 
+                break;
+            case ZoneManager.ZoneType.Mining: 
+                color = new Color(0f, 1f, 1f, 0.4f); 
+                break;
+            case ZoneManager.ZoneType.Harvesting: 
+                color = new Color(1f, 0f, 1f, 0.4f); 
+                break;
+            default: 
+                color = new Color(0.5f, 0.5f, 0.5f, 0.4f); 
+                break;
         }
+
+        if (isErasing)
+        {
+            color = new Color(1f, 0.2f, 0.2f, 0.35f);
+        }
+
+        selectionRenderer.color = color;
     }
 
     void UpdateSelectionBoxVisual(Vector3 currentMousePos)
@@ -99,9 +152,21 @@ public class MouseController : MonoBehaviour
     {
         currentMode = newMode;
         UpdateSelectionColor(); // Actualizar color al cambiar herramienta
+
+        if (zoneManager != null)
+        {
+            if (currentMode == ZoneManager.ZoneType.None)
+            {
+                zoneManager.HideAllZones();
+            }
+            else
+            {
+                zoneManager.ShowOnlyZone(currentMode);
+            }
+        }
     }
 
-    void ApplyZone(Vector3 startWorld, Vector3 endWorld)
+    void ApplyZone(Vector3 startWorld, Vector3 endWorld, bool erase)
     {
         Vector3Int startCell = mainGrid.WorldToCell(startWorld);
         Vector3Int endCell = mainGrid.WorldToCell(endWorld);
@@ -112,13 +177,23 @@ public class MouseController : MonoBehaviour
         int maxY = Mathf.Max(startCell.y, endCell.y);
 
         BoundsInt area = new BoundsInt(new Vector3Int(minX, minY, 0), new Vector3Int(maxX - minX + 1, maxY - minY + 1, 1));
-        zoneManager.MarkZone(area, currentMode);
+        
+        if (erase)
+        {
+            zoneManager.EraseZone(area, currentMode);
+        }
+        else
+        {
+            zoneManager.MarkZone(area, currentMode);
+        }
     }
 
     // Cuando se apaga el script, el cuadro desaparece para que no se quede congelado
     void OnDisable()
     {
         isDragging = false;
+        isErasing = false;
+
         if (selectionBoxVisual != null)
         {
             selectionBoxVisual.SetActive(false);

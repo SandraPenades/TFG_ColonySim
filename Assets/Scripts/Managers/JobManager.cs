@@ -97,4 +97,9 @@ public class JobManager : MonoBehaviour
 
         return count;
     }
+
+    public void RemovePendingJobsAtPosition(Job.JobType type, Vector3Int position)
+    {
+        pendingJobs.RemoveAll(job => job.type == type && job.position == position && job.state == Job.JobState.Pendiente);
+    }
 }
