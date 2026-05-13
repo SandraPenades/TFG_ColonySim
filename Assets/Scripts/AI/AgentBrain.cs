@@ -274,8 +274,16 @@ public class AgentBrain : MonoBehaviour
         {
             currentAction.ResetAction();
             currentAction = null;
-            currentDecisionReason = "Acción cancelada";
         }
+
+        if (movement != null)
+        {
+            movement.StopMoving();
+        }
+
+        ClearCurrentPlan();
+
+        currentDecisionReason = "Acción cancelada";
     }
 
     private void ClearCurrentPlan()

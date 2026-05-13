@@ -15,8 +15,11 @@ public class ColonistInfoPanel : MonoBehaviour
     public TextMeshProUGUI energyText;
     public TextMeshProUGUI funText;
     public TextMeshProUGUI socialText;
+    public TextMeshProUGUI modeText;
+    public TextMeshProUGUI handItemText;
 
     private GameObject selectedColonist;
+    private ColonistRecruitment recruitment;
     private AgentBrain brain;
     private AgentNeeds needs;
 
@@ -48,6 +51,8 @@ public class ColonistInfoPanel : MonoBehaviour
         {
             ClearPanel();
         }
+
+        recruitment = selectedColonist.GetComponent<ColonistRecruitment>();
     }
 
     public void ClearPanel()
@@ -55,6 +60,7 @@ public class ColonistInfoPanel : MonoBehaviour
         selectedColonist = null;
         brain = null;
         needs = null;
+        recruitment = null;
 
         gameObject.SetActive(false);
     }
@@ -86,6 +92,32 @@ public class ColonistInfoPanel : MonoBehaviour
         if (decisionText != null)
         {
             decisionText.text = brain != null ? $"Decisión: {brain.GetCurrentDecisionReason()}" : "Decisión: -";
+        }
+
+        if (modeText != null)
+        {
+            if (recruitment != null && recruitment.IsRecruited)
+            {
+                modeText.text = "Modo: Reclutado";
+            }
+            else
+            {
+                modeText.text = "Modo: Autónomo";
+            }
+        }
+
+        if (handItemText != null)
+        {
+            ResourceItem carriedItem = selectedColonist.GetComponentInChildren<ResourceItem>();
+
+            if (carriedItem != null)
+            {
+                handItemText.text = $"En mano: {carriedItem.itemID} x{carriedItem.amount}";
+            }
+            else
+            {
+                handItemText.text = "En mano: Nada";
+            }
         }
 
         if (needs != null)
