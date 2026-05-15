@@ -13,6 +13,7 @@ public class AgentBrain : MonoBehaviour
     public int prioridadMineria = 1;
     public int prioridadRecoleccion = 1;
     public int prioridadSocializar = 1;
+    public int prioridadContruccion = 1;
 
     private AgentMovement movement;
     private AgentNeeds needs;
@@ -163,6 +164,15 @@ public class AgentBrain : MonoBehaviour
             ));
         }
 
+        if (currentState.GetState("has_build_job") && prioridadContruccion > 0)
+        {
+            goals.Add(new GoapGoal(
+                "Construir blueprint",
+                new Dictionary<string, bool> { { "blueprint_finished", true } },
+                prioridadContruccion + 3
+            ));
+        }
+
         // De momento socialización y diversión pueden quedarse fuera hasta que estén implementadas
         // if (needs != null && needs.IsLonely())
         // {
@@ -242,6 +252,7 @@ public class AgentBrain : MonoBehaviour
             else if (action is Action_Haul) action.cost = prioridadTransporte == 0 ? 0 : prioridadTransporte + 2;
             else if (action is Action_Mining) action.cost = prioridadMineria == 0 ? 0 : prioridadMineria + 2;
             else if (action is Action_Harvest) action.cost = prioridadRecoleccion == 0 ? 0 : prioridadRecoleccion + 2;
+            else if (action is Action_Build) action.cost = prioridadContruccion == 0 ? 0 : prioridadContruccion + 2;
             // AQUÍ SE AÑADEN LAS NUEVAS ACCIONES
 
             // Si no hay nada que hacer, que se de un paseo

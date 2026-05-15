@@ -25,11 +25,13 @@ public class WorldStateProvider : MonoBehaviour
         state.SetState("has_mining_job", JobManager.Instance != null && JobManager.Instance.HasPendingJob(Job.JobType.Minar));
         state.SetState("has_haul_job", JobManager.Instance != null && JobManager.Instance.HasPendingJob(Job.JobType.Transportar));
         state.SetState("has_harvest_job", JobManager.Instance != null && JobManager.Instance.HasPendingJob(Job.JobType.Recolectar));
+        state.SetState("has_build_job", ConstructionManager.Instance != null && ConstructionManager.Instance.HasPendingBlueprint());
 
         // Recursos y almacenamiento
         state.SetState("has_loose_resource", CheckLooseResourceAvailable());
         state.SetState("has_loose_food", CheckLooseFoodAvailable());
         state.SetState("has_storage_available", CheckStorageAvailable());
+        state.SetState("has_required_build_resources", CheckRequiredBuildResourcesAvailable());
 
         return state;
     }
@@ -118,5 +120,62 @@ public class WorldStateProvider : MonoBehaviour
         }
 
         return false;
+    }
+
+    private bool CheckStoredItemAvailable(string itemID, int amount)
+    {
+        GameObject[] storages = GameObject.FindGameObjectsWithTag("Storage");
+
+        foreach (GameObject storageObj in storages)
+        {
+            StorageBuilding storage = storageObj.GetComponent<StorageBuilding>();
+
+            if (storage != null && storage.HasItemAmount(itemID, amount))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private bool CheckRequiredBuildResourcesAvailable()
+    {
+        if (ConstructionManager.Instance == null) return false;
+
+        Blueprint blueprint = ConstructionManager.Instance.GetFirstPendingBlueprint();
+
+        if (blueprint == null) return false;
+
+        if (blueprint.resourcesDelivered) return true;
+
+        foreach (RequiredResource required in blueprint.requiredResources)
+        {
+            if (!CheckStoredItemAmount(required.itemID, required.amount))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private bool CheckStoredItemAmount(string itemID, int requiredAmount)
+    {
+        GameObject[] storages = GameObject.FindGameObjectsWithTag("Storage");
+
+        int totalAmount = 0;
+
+        foreach (GameObject storageObj in storages)
+        {
+            StorageBuilding storage = storageObj.GetComponent<StorageBuilding>();
+
+            if (storage != null)
+            {
+                totalAmount += storage.GetItemAmount(itemID);
+            }
+        }
+
+        return totalAmount >= requiredAmount;
     }
 }

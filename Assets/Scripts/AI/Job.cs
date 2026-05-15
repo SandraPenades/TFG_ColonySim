@@ -5,7 +5,7 @@ using UnityEngine;
 public class Job
 {
     // Los tipos de trabajo en el juego
-    public enum JobType {Talar, Minar, Recolectar, Construir, Transportar}
+    public enum JobType {Talar, Minar, Recolectar, Transportar, Construir}
 
     // En qué estado se encuentra el trabajo
     public enum JobState {Pendiente, EnProgreso, Completado}

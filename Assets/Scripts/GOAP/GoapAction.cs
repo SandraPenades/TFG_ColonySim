@@ -4,6 +4,7 @@ using UnityEngine;
 
 public abstract class GoapAction : MonoBehaviour
 {
+    [HideInInspector]
     public string actionName = "Accion_Base";
     
     [HideInInspector]

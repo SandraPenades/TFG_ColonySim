@@ -56,6 +56,11 @@ public class StorageBuilding : MonoBehaviour
         return false;
     }
 
+    public bool HasItemAmount(string searchID, int requiredAmount)
+    {
+        return GetItemAmount(searchID) >= requiredAmount;
+    }
+
     // Guardar item en la estantería
     public void AddItem(string itemName, int amount)
     {
@@ -90,6 +95,11 @@ public class StorageBuilding : MonoBehaviour
         {
             if (inventory[i].itemID.ToLower() == searchID.ToLower())
             {
+                if (inventory[i].amount < amountToTake)
+                {
+                    return false;
+                }
+
                 inventory[i].amount -= amountToTake;
 
                 if (inventory[i].amount <= 0)
@@ -102,6 +112,41 @@ public class StorageBuilding : MonoBehaviour
             }
         }
         return false;
+    }
+
+    public int GetItemAmount(string searchID)
+    {
+        foreach (StorageSlot slot in inventory)
+        {
+            if (slot.itemID.ToLower() == searchID.ToLower())
+            {
+                return slot.amount;
+            }
+        }
+
+        return 0;
+    }
+
+    private bool ConsumeRequiredResources(Blueprint blueprint)
+    {
+        StorageBuilding storage = FindObjectOfType<StorageBuilding>();
+
+        if (storage == null) return false;
+
+        foreach (RequiredResource required in blueprint.requiredResources)
+        {
+            if (!storage.HasItemAmount(required.itemID, required.amount))
+            {
+                return false;
+            }
+        }
+
+        foreach (RequiredResource required in blueprint.requiredResources)
+        {
+            storage.TakeItem(required.itemID, required.amount);
+        }
+
+        return true;
     }
 
     // Comprobar si hay algún item comestible
@@ -137,9 +182,9 @@ public class StorageBuilding : MonoBehaviour
             {
                 Sprite s = database.GetSprite(slot.itemID);
 
-                if (s == null) Debug.LogWarning($"⛔ No encontré el sprite para: '{slot.itemID}' en la base de datos.");
-                if (visualSlotPrefab == null) Debug.LogWarning("⛔ Falta asignar el Visual Slot Prefab en el Inspector.");
-                if (container == null) Debug.LogWarning("⛔ Falta asignar el Container en el Inspector.");
+                if (s == null) return;
+                if (visualSlotPrefab == null) return;
+                if (container == null) return;
 
                 if (s != null && visualSlotPrefab != null && container != null)
                 {
@@ -147,8 +192,26 @@ public class StorageBuilding : MonoBehaviour
 
                     newVisual.transform.localPosition = new Vector3(offset, 0, 0);
 
-                    newVisual.GetComponentInChildren<SpriteRenderer>().sprite = s;
-                    newVisual.GetComponentInChildren<TextMeshPro>().text = slot.amount.ToString();
+                    SpriteRenderer itemSpriteRenderer = newVisual.GetComponentInChildren<SpriteRenderer>();
+                    TextMeshPro amountText = newVisual.GetComponentInChildren<TextMeshPro>();
+
+                    if (itemSpriteRenderer != null)
+                    {
+                        itemSpriteRenderer.sprite = s;
+                        itemSpriteRenderer.sortingOrder = 10;
+                    }
+
+                    if (amountText != null)
+                    {
+                        amountText.text = slot.amount.ToString();
+
+                        MeshRenderer textRenderer = amountText.GetComponent<MeshRenderer>();
+
+                        if (textRenderer != null)
+                        {
+                            textRenderer.sortingOrder = 20;
+                        }
+                    }
 
                     spawnedVisuals.Add(newVisual);
 
