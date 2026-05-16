@@ -12,7 +12,7 @@ public class Action_Harvest : GoapAction
     private Job currentJob;
     private AgentMovement movement;
     private Grid mainGrid;
-    private Tilemap obstaclesMap;
+    private Tilemap resourcesMap;
 
     protected override void Awake()
     {
@@ -28,8 +28,8 @@ public class Action_Harvest : GoapAction
         // Buscar el Grid
         mainGrid = FindFirstObjectByType<Grid>();
 
-        GameObject obsObj = GameObject.Find("Obstaculos");
-        if (obsObj != null) obstaclesMap = obsObj.GetComponent<Tilemap>();
+        GameObject resObj = GameObject.Find("RecursosNaturales");
+        if (resObj != null) resourcesMap = resObj.GetComponent<Tilemap>();
     }
 
     // Precondición: Podemos recolectar bayas?
@@ -75,9 +75,9 @@ public class Action_Harvest : GoapAction
         yield return new WaitForSeconds(1.5f);
 
         // Cambiar el sprite de con bayas a vacío
-        if (obstaclesMap != null && emptyBushTile != null)
+        if (resourcesMap != null && emptyBushTile != null)
         {
-            obstaclesMap.SetTile(currentJob.position, emptyBushTile);
+            resourcesMap.SetTile(currentJob.position, emptyBushTile);
 
             // Llama al FloraManager para que el arbusto vuelva a crecer
             FloraManager.Instance.StartBushRegrowth(currentJob.position);

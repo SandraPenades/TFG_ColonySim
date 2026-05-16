@@ -10,7 +10,7 @@ public class Action_ChopTree : GoapAction
     private Job currentJob;
     private AgentMovement movement;
     private Grid mainGrid;
-    private Tilemap obstaclesMap;
+    private Tilemap resourcesMap;
     private NavMeshSurface navSurface;
 
     protected override void Awake()
@@ -27,8 +27,8 @@ public class Action_ChopTree : GoapAction
         // Buscar el Grid
         mainGrid = FindFirstObjectByType<Grid>();
 
-        GameObject obsObj = GameObject.Find("Obstaculos");
-        if (obsObj != null) obstaclesMap = obsObj.GetComponent<Tilemap>();
+        GameObject resObj = GameObject.Find("RecursosNaturales");
+        if (resObj != null) resourcesMap = resObj.GetComponent<Tilemap>();
 
         navSurface = FindFirstObjectByType<NavMeshSurface>();
     }
@@ -78,9 +78,9 @@ public class Action_ChopTree : GoapAction
         yield return new WaitForSeconds(3.0f);
 
         // Borrar el árbol
-        if (obstaclesMap != null)
+        if (resourcesMap != null)
         {
-            obstaclesMap.SetTile(currentJob.position, null);
+            resourcesMap.SetTile(currentJob.position, null);
         }
 
         yield return null;

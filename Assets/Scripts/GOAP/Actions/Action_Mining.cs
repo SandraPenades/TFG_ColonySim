@@ -10,7 +10,7 @@ public class Action_Mining : GoapAction
     private Job currentJob;
     private AgentMovement movement;
     private Grid mainGrid;
-    private Tilemap obstaclesMap;
+    private Tilemap resourcesMap;
     private NavMeshSurface navSurface;
 
     protected override void Awake()
@@ -28,8 +28,8 @@ public class Action_Mining : GoapAction
         mainGrid = FindFirstObjectByType<Grid>();
         navSurface = FindFirstObjectByType<NavMeshSurface>();
 
-        GameObject obsObj = GameObject.Find("Obstaculos");
-        if (obsObj != null) obstaclesMap = obsObj.GetComponent<Tilemap>();
+        GameObject resObj = GameObject.Find("RecursosNaturales");
+        if (resObj != null) resourcesMap = resObj.GetComponent<Tilemap>();
     }
 
     // Precondición: Podemos minar?
@@ -77,9 +77,9 @@ public class Action_Mining : GoapAction
         yield return new WaitForSeconds(3.0f);
 
         // Borrar la piedra
-        if (obstaclesMap != null)
+        if (resourcesMap != null)
         {
-            obstaclesMap.SetTile(currentJob.position, null);
+            resourcesMap.SetTile(currentJob.position, null);
         }
 
         yield return null;

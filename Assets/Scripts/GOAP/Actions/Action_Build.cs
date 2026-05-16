@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using NavMeshPlus.Components;
 
 public class Action_Build : GoapAction
 {
@@ -12,6 +13,7 @@ public class Action_Build : GoapAction
 
     public GameObject genericItemPrefab;
     public ItemDatabase database;
+    private NavMeshSurface navSurface;
 
     private bool isDone = false;
     private bool hasStarted = false;
@@ -27,6 +29,8 @@ public class Action_Build : GoapAction
         AddPrecondition("has_required_build_resources", true);
 
         AddEffect("blueprint_finished", true);
+
+        navSurface = FindFirstObjectByType<NavMeshSurface>();
     }
 
     public override bool CheckProceduralPrecondition(GameObject agent)
@@ -136,8 +140,20 @@ public class Action_Build : GoapAction
             Instantiate(currentBlueprint.finalPrefab, currentBlueprint.transform.position, Quaternion.identity);
         }
 
+        yield return null;
+
+        if (navSurface != null)
+        {
+            navSurface.BuildNavMesh();
+        }
+
         currentBlueprint.isCompleted = true;
         ConstructionManager.Instance.UnregisterBlueprint(currentBlueprint);
+
+        if (BuilderManager.Instance != null)
+        {
+            BuilderManager.Instance.UnregisterBlueprintCell(currentBlueprint.cellPosition);
+        }
 
         Destroy(currentBlueprint.gameObject);
 

@@ -8,7 +8,7 @@ public class FloraManager : MonoBehaviour
     public static FloraManager Instance;
 
     // Referencias
-    public Tilemap obstaclesMap;
+    public Tilemap resourcesMap;
     public TileBase fullBushTile;
     public TileBase emptyBushTile;
 
@@ -24,11 +24,11 @@ public class FloraManager : MonoBehaviour
     void Start()
     {
         // Al empezar, se escanea el mapa con la flora.
-        BoundsInt bounds = obstaclesMap.cellBounds;
+        BoundsInt bounds = resourcesMap.cellBounds;
 
         foreach (Vector3Int pos in bounds.allPositionsWithin)
         {
-            TileBase tileAtPos = obstaclesMap.GetTile(pos);
+            TileBase tileAtPos = resourcesMap.GetTile(pos);
 
             // Si el tile es un arbusto vacío...
             if (tileAtPos != null && tileAtPos == emptyBushTile)
@@ -51,9 +51,9 @@ public class FloraManager : MonoBehaviour
         yield return new WaitForSeconds(regrowTime);
 
         // Vuelve a aparecer el sprite con bayas
-        if (obstaclesMap != null && fullBushTile != null)
+        if (resourcesMap != null && fullBushTile != null)
         {
-            obstaclesMap.SetTile(pos, fullBushTile);
+            resourcesMap.SetTile(pos, fullBushTile);
 
             if (ZoneManager.Instance != null)
             {

@@ -7,6 +7,7 @@ public class UIManager : MonoBehaviour
     public static UIManager Instance;
 
     public GameObject zoneMenuPanel;
+    public GameObject buildMenuPanel;
 
     public SelectionManager selectionManager;
     public MouseController mouseController;
@@ -19,40 +20,47 @@ public class UIManager : MonoBehaviour
 
     void Start()
     {
-        // Que el panel empiece oculto
         if (zoneMenuPanel != null) zoneMenuPanel.SetActive(false);
+        if (buildMenuPanel != null) buildMenuPanel.SetActive(false);
+
         if (mouseController != null) mouseController.enabled = false;
 
         if (ZoneManager.Instance != null)
         {
             ZoneManager.Instance.HideAllZones();
         }
+
+        if (BuilderManager.Instance != null)
+        {
+            BuilderManager.Instance.CancelBuildMode();
+        }
     }
 
     public void ToggleZoneMenu()
     {
-        bool isCurrentlyActive = zoneMenuPanel.activeSelf;
+        if (zoneMenuPanel == null) return;
 
-        if (!isCurrentlyActive)
+        bool isCurrentlyActive = zoneMenuPanel.activeSelf;
+        bool newState = !isCurrentlyActive;
+
+        if (newState)
         {
-            // Primero deseleccionar todo
+            // Si abrimos zonas, cerramos construcción
+            CloseBuildMenu();
+
             if (selectionManager != null)
             {
                 selectionManager.DeselectAll();
             }
         }
 
-        // Si está apagado se enciende y viceversa
-        bool newState = !isCurrentlyActive;
         zoneMenuPanel.SetActive(newState);
 
-        // Activar/Desactivar la lógica del ratón para zonear
         if (mouseController != null)
         {
             mouseController.enabled = newState;
         }
 
-        // Si se cierra el menú, ocultar todas las zonas
         if (!newState && ZoneManager.Instance != null)
         {
             ZoneManager.Instance.HideAllZones();
@@ -61,12 +69,58 @@ public class UIManager : MonoBehaviour
 
     public void CloseZoneMenu()
     {
-        if (zoneMenuPanel != null) zoneMenuPanel.SetActive(false);
-        if (mouseController != null) mouseController.enabled = false;
+        if (zoneMenuPanel != null)
+        {
+            zoneMenuPanel.SetActive(false);
+        }
+
+        if (mouseController != null)
+        {
+            mouseController.enabled = false;
+        }
 
         if (ZoneManager.Instance != null)
         {
             ZoneManager.Instance.HideAllZones();
+        }
+    }
+
+    public void ToggleBuildMenu()
+    {
+        if (buildMenuPanel == null) return;
+
+        bool isCurrentlyActive = buildMenuPanel.activeSelf;
+        bool newState = !isCurrentlyActive;
+
+        if (newState)
+        {
+            // Si abrimos construcción, cerramos zonas
+            CloseZoneMenu();
+
+            if (selectionManager != null)
+            {
+                selectionManager.DeselectAll();
+            }
+        }
+
+        buildMenuPanel.SetActive(newState);
+
+        if (!newState && BuilderManager.Instance != null)
+        {
+            BuilderManager.Instance.CancelBuildMode();
+        }
+    }
+
+    public void CloseBuildMenu()
+    {
+        if (buildMenuPanel != null)
+        {
+            buildMenuPanel.SetActive(false);
+        }
+
+        if (BuilderManager.Instance != null)
+        {
+            BuilderManager.Instance.CancelBuildMode();
         }
     }
 }

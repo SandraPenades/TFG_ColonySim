@@ -21,6 +21,9 @@ public class Blueprint : MonoBehaviour
     public bool resourcesDelivered = false;
     public bool isCompleted = false;
 
+    [HideInInspector]
+    public Vector3Int cellPosition;
+
     private void Start()
     {
         if (ConstructionManager.Instance != null)

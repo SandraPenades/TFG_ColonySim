@@ -12,8 +12,8 @@ public class ZoneManager : MonoBehaviour
     public Tilemap miningZoneTilemap;
     public Tilemap harvestingZoneTilemap;
 
-    [Header("Tilemap de Obstáculos")]
-    public Tilemap obstaclesTilemap; // Para comprobar si hay árboles
+    [Header("Tilemap de Recursos Naturales")]
+    public Tilemap resourcesTilemap; // Para comprobar si hay árboles
 
     [Header("Tiles visuales de zonas")]
     public TileBase loggingZoneTile;
@@ -170,10 +170,10 @@ public class ZoneManager : MonoBehaviour
 
     private void TryCreateJobAtPosition(Vector3Int pos, ZoneType type)
     {
-        if (obstaclesTilemap == null) return;
+        if (resourcesTilemap == null) return;
 
-        Sprite tileSprite = obstaclesTilemap.GetSprite(pos);
-        TileBase currentTile = obstaclesTilemap.GetTile(pos);
+        Sprite tileSprite = resourcesTilemap.GetSprite(pos);
+        TileBase currentTile = resourcesTilemap.GetTile(pos);
 
         if (tileSprite == null || currentTile == null) return;
 
@@ -219,10 +219,10 @@ public class ZoneManager : MonoBehaviour
 
     public void UpdateJobAtPosition(Vector3Int pos)
     {
-        if (obstaclesTilemap == null) return;
+        if (resourcesTilemap == null) return;
 
-        Sprite tileSprite = obstaclesTilemap.GetSprite(pos);
-        TileBase currentTile = obstaclesTilemap.GetTile(pos);
+        Sprite tileSprite = resourcesTilemap.GetSprite(pos);
+        TileBase currentTile = resourcesTilemap.GetTile(pos);
 
         if (tileSprite == null || currentTile == null) return;
 
