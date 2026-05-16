@@ -9,12 +9,18 @@ public class BuilderManager : MonoBehaviour
     public static BuilderManager Instance;
 
     public Grid mainGrid;
-    public Tilemap obstaclesTilemap;
+    public Tilemap resourcesTilemap;
     public LayerMask blockingPlacementLayer;
     private HashSet<Vector3Int> occupiedBlueprintCells = new HashSet<Vector3Int>();
 
     public GameObject selectedBlueprintPrefab;
     public bool isBuildModeActive = false;
+
+    private GameObject previewObject;
+    private SpriteRenderer previewRenderer;
+
+    public Color validPreviewColor = new Color(1f, 1f, 1f, 0.45f);
+    public Color invalidPreviewColor = new Color(1f, 0.3f, 0.3f, 0.45f);
 
     private void Awake()
     {
@@ -25,6 +31,9 @@ public class BuilderManager : MonoBehaviour
     private void Update()
     {
         if (!isBuildModeActive || selectedBlueprintPrefab == null) return;
+        if (selectedBlueprintPrefab == null) return;
+
+        UpdatePreview();
 
         if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
         {
@@ -46,12 +55,77 @@ public class BuilderManager : MonoBehaviour
     {
         selectedBlueprintPrefab = blueprintPrefab;
         isBuildModeActive = true;
+
+        CreatePreview();
+    }
+
+    private void CreatePreview()
+    {
+        DestroyPreview();
+
+        if (selectedBlueprintPrefab == null) return;
+
+        previewObject = Instantiate(selectedBlueprintPrefab);
+        previewObject.name = "BuildPreview";
+
+        Blueprint blueprint = previewObject.GetComponent<Blueprint>();
+        if (blueprint != null)
+        {
+            blueprint.enabled = false;
+        }
+
+        Collider2D[] colliders = previewObject.GetComponentsInChildren<Collider2D>();
+        foreach(Collider2D col in colliders)
+        {
+            col.enabled = false;
+        }
+
+        previewRenderer = previewObject.GetComponentInChildren<SpriteRenderer>();
+
+        if (previewRenderer != null)
+        {
+            previewRenderer.color = validPreviewColor;
+            previewRenderer.sortingOrder = 50;
+        }
+    }
+
+    private void DestroyPreview()
+    {
+        if (previewObject != null)
+        {
+            Destroy(previewObject);
+            previewObject = null;
+            previewRenderer = null;
+        }
+    }
+
+    private void UpdatePreview()
+    {
+        if (previewObject == null) return;
+        if (mainGrid == null) return;
+
+        Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        mouseWorldPos.z = 0;
+
+        Vector3Int cellPos = mainGrid.WorldToCell(mouseWorldPos);
+        Vector3 placeWorldPos = mainGrid.GetCellCenterWorld(cellPos);
+
+        previewObject.transform.position = placeWorldPos;
+
+        bool canPlace = CanPlaceAt(cellPos);
+
+        if (previewRenderer != null)
+        {
+            previewRenderer.color = canPlace ? validPreviewColor : invalidPreviewColor;
+        }
     }
 
     public void CancelBuildMode()
     {
         selectedBlueprintPrefab = null;
         isBuildModeActive = false;
+
+        DestroyPreview();
     }
 
     private void TryPlaceBlueprint()
@@ -82,7 +156,7 @@ public class BuilderManager : MonoBehaviour
 
     private bool CanPlaceAt(Vector3Int cellPos)
     {
-        if (obstaclesTilemap != null && obstaclesTilemap.GetTile(cellPos) != null) return false;
+        if (resourcesTilemap != null && resourcesTilemap.GetTile(cellPos) != null) return false;
         if (occupiedBlueprintCells.Contains(cellPos)) return false;
 
         Vector3 worldPos = mainGrid.GetCellCenterWorld(cellPos);
