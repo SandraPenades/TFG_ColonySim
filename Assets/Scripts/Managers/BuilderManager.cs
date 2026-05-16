@@ -11,6 +11,7 @@ public class BuilderManager : MonoBehaviour
     public Grid mainGrid;
     public Tilemap resourcesTilemap;
     public LayerMask blockingPlacementLayer;
+    public LayerMask blueprintLayer;
     private HashSet<Vector3Int> occupiedBlueprintCells = new HashSet<Vector3Int>();
 
     public GameObject selectedBlueprintPrefab;
@@ -21,6 +22,8 @@ public class BuilderManager : MonoBehaviour
 
     public Color validPreviewColor = new Color(1f, 1f, 1f, 0.45f);
     public Color invalidPreviewColor = new Color(1f, 0.3f, 0.3f, 0.45f);
+
+    public BuildInfoPanel buildInfoPanel;
 
     private void Awake()
     {
@@ -47,7 +50,20 @@ public class BuilderManager : MonoBehaviour
 
         if (Input.GetMouseButtonDown(1))
         {
-            CancelBuildMode();
+            TryCancelBlueprint();
+        }
+
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            if (UIManager.Instance != null)
+            {
+                UIManager.Instance.CloseBuildMenu();
+            }
+            else
+            {
+                CancelBuildMode();
+            }
+            return;
         }
     }
 
@@ -57,6 +73,12 @@ public class BuilderManager : MonoBehaviour
         isBuildModeActive = true;
 
         CreatePreview();
+
+        if (buildInfoPanel != null && selectedBlueprintPrefab != null)
+        {
+            Blueprint blueprintData = selectedBlueprintPrefab.GetComponent<Blueprint>();
+            buildInfoPanel.Show(blueprintData);
+        }
     }
 
     private void CreatePreview()
@@ -126,6 +148,11 @@ public class BuilderManager : MonoBehaviour
         isBuildModeActive = false;
 
         DestroyPreview();
+
+        if (buildInfoPanel != null)
+        {
+            buildInfoPanel.Hide();
+        }
     }
 
     private void TryPlaceBlueprint()
@@ -145,33 +172,152 @@ public class BuilderManager : MonoBehaviour
         GameObject newBlueprint = Instantiate(selectedBlueprintPrefab, placeWorldPos, Quaternion.identity);
 
         Blueprint blueprint = newBlueprint.GetComponent<Blueprint>();
+        Vector2Int size = Vector2Int.one;
 
         if (blueprint != null)
         {
             blueprint.cellPosition = cellPos;
+            size = blueprint.sizeInCells;
         }
 
-        occupiedBlueprintCells.Add(cellPos);
+        foreach (Vector3Int occupiedCell in GetOccupiedCells(cellPos, size))
+        {
+            occupiedBlueprintCells.Add(occupiedCell);
+        }
     }
 
-    private bool CanPlaceAt(Vector3Int cellPos)
+    private void TryCancelBlueprint()
     {
-        if (resourcesTilemap != null && resourcesTilemap.GetTile(cellPos) != null) return false;
-        if (occupiedBlueprintCells.Contains(cellPos)) return false;
+        Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        mouseWorldPos.z = 0;
 
-        Vector3 worldPos = mainGrid.GetCellCenterWorld(cellPos);
-        Collider2D hit = Physics2D.OverlapPoint(worldPos, blockingPlacementLayer);
+        Collider2D hit = Physics2D.OverlapPoint(mouseWorldPos, blueprintLayer);
 
-        if (hit != null) return false;
+        if (hit == null)
+        {
+            return;
+        }
+
+        Blueprint blueprint = hit.GetComponent<Blueprint>();
+
+        if (blueprint == null)
+        {
+            blueprint = hit.GetComponentInParent<Blueprint>();
+        }
+
+        if (blueprint == null)
+        {
+            return;
+        }
+
+        CancelPlacedBlueprint(blueprint);
+    }
+
+    private void CancelPlacedBlueprint(Blueprint blueprint)
+    {
+        if (blueprint == null) return;
+
+        if (blueprint.isReserved)
+        {
+            Debug.Log("[BuilderManager] No se puede cancelar, está reservado por un colono");
+            return;
+        }
+
+        if (blueprint.resourcesDelivered)
+        {
+            Debug.Log("[BuilderManager] No se puede cancelar, tiene recursos");
+            return;
+        }
+
+        if (blueprint.isCompleted)
+        {
+            Debug.Log("[BuilderManager] No se puede cancelar, está completo");
+            return;
+        }
+
+        if (ConstructionManager.Instance != null)
+        {
+            ConstructionManager.Instance.UnregisterBlueprint(blueprint);
+        }
+
+        UnregisterBlueprintCells(blueprint.cellPosition, blueprint.sizeInCells);
+
+        Destroy(blueprint.gameObject);
+    }
+
+    private List<Vector3Int> GetOccupiedCells(Vector3Int originCell, Vector2Int size)
+    {
+        List<Vector3Int> cells = new List<Vector3Int>();
+
+        for (int x = 0; x < size.x; x++)
+        {
+            for (int y = 0; y < size.y; y++)
+            {
+                cells.Add(new Vector3Int(originCell.x + x, originCell.y + y, 0));
+            }
+        }
+
+        return cells;
+    }
+
+    private Vector2Int GetSelectedBlueprintSize()
+    {
+        if (selectedBlueprintPrefab == null)
+        {
+            return Vector2Int.one;
+        }
+
+        Blueprint blueprint = selectedBlueprintPrefab.GetComponent<Blueprint>();
+
+        if (blueprint == null)
+        {
+            return Vector2Int.one;
+        }
+
+        return blueprint.sizeInCells;
+    }
+
+    private Vector3 GetPlacementWorldPosition(Vector3Int originCell, Vector2Int size)
+    {
+        Vector3 start = mainGrid.GetCellCenterWorld(originCell);
+
+        Vector3 offset = new Vector3(
+            (size.x - 1) * mainGrid.cellSize.x / 2f,
+            (size.y - 1) * mainGrid.cellSize.y / 2f,
+            0
+        );
+
+        return start + offset;
+    }
+
+    private bool CanPlaceAt(Vector3Int originCell)
+    {
+        Vector2Int size = GetSelectedBlueprintSize();
+        List<Vector3Int> occupiedCells = GetOccupiedCells(originCell, size);
+
+        foreach (Vector3Int cell in occupiedCells)
+        {
+            if (resourcesTilemap != null && resourcesTilemap.GetTile(cell) != null) return false;
+
+            if (occupiedBlueprintCells.Contains(cell)) return false;
+
+            Vector3 worldPos = mainGrid.GetCellCenterWorld(cell);
+            Collider2D hit = Physics2D.OverlapPoint(worldPos, blockingPlacementLayer);
+
+            if (hit != null)
+            {
+                return false;
+            }
+        }
 
         return true;
     }
 
-    public void UnregisterBlueprintCell(Vector3Int cellPos)
+    public void UnregisterBlueprintCells(Vector3Int originCell, Vector2Int size)
     {
-        if (occupiedBlueprintCells.Contains(cellPos))
+        foreach (Vector3Int cell in GetOccupiedCells(originCell, size))
         {
-            occupiedBlueprintCells.Remove(cellPos);
+            occupiedBlueprintCells.Remove(cell);
         }
     }
 }

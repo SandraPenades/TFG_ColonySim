@@ -152,7 +152,7 @@ public class Action_Build : GoapAction
 
         if (BuilderManager.Instance != null)
         {
-            BuilderManager.Instance.UnregisterBlueprintCell(currentBlueprint.cellPosition);
+            BuilderManager.Instance.UnregisterBlueprintCells(currentBlueprint.cellPosition, currentBlueprint.sizeInCells);
         }
 
         Destroy(currentBlueprint.gameObject);

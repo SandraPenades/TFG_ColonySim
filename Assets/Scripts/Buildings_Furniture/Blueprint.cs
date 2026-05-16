@@ -21,6 +21,8 @@ public class Blueprint : MonoBehaviour
     public bool resourcesDelivered = false;
     public bool isCompleted = false;
 
+    public Vector2Int sizeInCells = Vector2Int.one;
+
     [HideInInspector]
     public Vector3Int cellPosition;
 

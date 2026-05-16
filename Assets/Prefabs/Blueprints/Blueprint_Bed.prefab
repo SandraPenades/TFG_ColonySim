@@ -11,9 +11,9 @@ GameObject:
   - component: {fileID: 4478908755517787883}
   - component: {fileID: 8895197370443369658}
   - component: {fileID: 5489355219832108293}
-  - component: {fileID: -2565806525470625360}
+  - component: {fileID: 6486032254490179139}
   m_Layer: 7
-  m_Name: Blueprint_Stone_Wall
+  m_Name: Blueprint_Bed
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -29,7 +29,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -4.6235113, y: 2.6000125, z: -0.023129351}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 2, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -98,17 +98,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 85b4b1e20e133dd43934ad405d5acc77, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  blueprintName: Muro de piedra
-  finalPrefab: {fileID: 6003673874499218854, guid: 39d9581e675f83142b75d3ac62671158, type: 3}
+  blueprintName: Cama
+  finalPrefab: {fileID: 8617399710996950822, guid: d19b113d9f63961458f5d50f82c69eda, type: 3}
   requiredResources:
-  - itemID: Piedra
-    amount: 10
+  - itemID: Madera
+    amount: 15
   isReserved: 0
   resourcesDelivered: 0
   isCompleted: 0
-  sizeInCells: {x: 1, y: 1}
+  sizeInCells: {x: 2, y: 1}
   cellPosition: {x: 0, y: 0, z: 0}
---- !u!61 &-2565806525470625360
+--- !u!61 &6486032254490179139
 BoxCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
