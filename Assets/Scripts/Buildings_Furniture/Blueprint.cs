@@ -23,8 +23,12 @@ public class Blueprint : MonoBehaviour
 
     public Vector2Int sizeInCells = Vector2Int.one;
 
+    public bool canRotate = false;
+    public int rotationStep = 90;
+
     [HideInInspector]
     public Vector3Int cellPosition;
+    public Vector2Int occupiedSize;
 
     private void Start()
     {

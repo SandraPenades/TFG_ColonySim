@@ -137,7 +137,7 @@ public class Action_Build : GoapAction
 
         if (currentBlueprint.finalPrefab != null)
         {
-            Instantiate(currentBlueprint.finalPrefab, currentBlueprint.transform.position, Quaternion.identity);
+            Instantiate(currentBlueprint.finalPrefab, currentBlueprint.transform.position, currentBlueprint.transform.rotation);
         }
 
         yield return null;
@@ -152,7 +152,7 @@ public class Action_Build : GoapAction
 
         if (BuilderManager.Instance != null)
         {
-            BuilderManager.Instance.UnregisterBlueprintCells(currentBlueprint.cellPosition, currentBlueprint.sizeInCells);
+            BuilderManager.Instance.UnregisterBlueprintCells(currentBlueprint.cellPosition, currentBlueprint.occupiedSize);
         }
 
         Destroy(currentBlueprint.gameObject);

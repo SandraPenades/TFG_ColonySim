@@ -24718,6 +24718,9 @@ MonoBehaviour:
   blockingPlacementLayer:
     serializedVersion: 2
     m_Bits: 384
+  blueprintLayer:
+    serializedVersion: 2
+    m_Bits: 128
   selectedBlueprintPrefab: {fileID: 0}
   isBuildModeActive: 0
   validPreviewColor: {r: 1, g: 1, b: 1, a: 0.45}
@@ -25528,7 +25531,7 @@ GameObject:
   - component: {fileID: 2031017619}
   - component: {fileID: 2031017618}
   m_Layer: 5
-  m_Name: Txt_CrearBorrar
+  m_Name: Txt_CrearBorrarRotar
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -25573,7 +25576,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Clic Izquierdo: Construir | Clic Derecho: Cancelar'
+  m_text: 'Clic Izquierdo: Construir | Clic Derecho: Eliminar | R: Rotar'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -25636,7 +25639,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: -694.33026, w: 0}
+  m_margin: {x: 0, y: 0, z: -782.2426, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0

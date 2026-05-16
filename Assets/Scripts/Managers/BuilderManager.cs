@@ -16,6 +16,7 @@ public class BuilderManager : MonoBehaviour
 
     public GameObject selectedBlueprintPrefab;
     public bool isBuildModeActive = false;
+    private float currentRotation = 0f;
 
     private GameObject previewObject;
     private SpriteRenderer previewRenderer;
@@ -37,6 +38,11 @@ public class BuilderManager : MonoBehaviour
         if (selectedBlueprintPrefab == null) return;
 
         UpdatePreview();
+
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            RotateSelectedBlueprint();
+        }
 
         if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
         {
@@ -72,6 +78,8 @@ public class BuilderManager : MonoBehaviour
         selectedBlueprintPrefab = blueprintPrefab;
         isBuildModeActive = true;
 
+        currentRotation = 0f;
+
         CreatePreview();
 
         if (buildInfoPanel != null && selectedBlueprintPrefab != null)
@@ -79,6 +87,17 @@ public class BuilderManager : MonoBehaviour
             Blueprint blueprintData = selectedBlueprintPrefab.GetComponent<Blueprint>();
             buildInfoPanel.Show(blueprintData);
         }
+    }
+
+    private bool SelectedBlueprintCanRotate()
+    {
+        if (selectedBlueprintPrefab == null) return false;
+
+        Blueprint blueprint = selectedBlueprintPrefab.GetComponent<Blueprint>();
+
+        if (blueprint == null) return false;
+
+        return blueprint.canRotate;
     }
 
     private void CreatePreview()
@@ -89,6 +108,7 @@ public class BuilderManager : MonoBehaviour
 
         previewObject = Instantiate(selectedBlueprintPrefab);
         previewObject.name = "BuildPreview";
+        previewObject.transform.rotation = Quaternion.Euler(0f, 0f, currentRotation);
 
         Blueprint blueprint = previewObject.GetComponent<Blueprint>();
         if (blueprint != null)
@@ -169,15 +189,16 @@ public class BuilderManager : MonoBehaviour
             return;
         }
 
-        GameObject newBlueprint = Instantiate(selectedBlueprintPrefab, placeWorldPos, Quaternion.identity);
+        Quaternion rotation = Quaternion.Euler(0f, 0f, currentRotation);
+        GameObject newBlueprint = Instantiate(selectedBlueprintPrefab, placeWorldPos, rotation);
 
         Blueprint blueprint = newBlueprint.GetComponent<Blueprint>();
-        Vector2Int size = Vector2Int.one;
+        Vector2Int size = GetSelectedBlueprintSizeWithRotation();
 
         if (blueprint != null)
         {
             blueprint.cellPosition = cellPos;
-            size = blueprint.sizeInCells;
+            blueprint.occupiedSize = size;
         }
 
         foreach (Vector3Int occupiedCell in GetOccupiedCells(cellPos, size))
@@ -240,7 +261,7 @@ public class BuilderManager : MonoBehaviour
             ConstructionManager.Instance.UnregisterBlueprint(blueprint);
         }
 
-        UnregisterBlueprintCells(blueprint.cellPosition, blueprint.sizeInCells);
+        UnregisterBlueprintCells(blueprint.cellPosition, blueprint.occupiedSize);
 
         Destroy(blueprint.gameObject);
     }
@@ -277,6 +298,30 @@ public class BuilderManager : MonoBehaviour
         return blueprint.sizeInCells;
     }
 
+    private Vector2Int GetSelectedBlueprintSizeWithRotation()
+    {
+        Vector2Int size = GetSelectedBlueprintSize();
+
+        if (!SelectedBlueprintCanRotate())
+        {
+            return size;
+        }
+
+        int normalizedRotation = Mathf.RoundToInt(currentRotation) % 360;
+
+        if (normalizedRotation < 0)
+        {
+            normalizedRotation += 360;
+        }
+
+        if (normalizedRotation == 90 || normalizedRotation == 270)
+        {
+            return new Vector2Int(size.y, size.x);
+        }
+
+        return size;
+    }
+
     private Vector3 GetPlacementWorldPosition(Vector3Int originCell, Vector2Int size)
     {
         Vector3 start = mainGrid.GetCellCenterWorld(originCell);
@@ -292,7 +337,7 @@ public class BuilderManager : MonoBehaviour
 
     private bool CanPlaceAt(Vector3Int originCell)
     {
-        Vector2Int size = GetSelectedBlueprintSize();
+        Vector2Int size = GetSelectedBlueprintSizeWithRotation();
         List<Vector3Int> occupiedCells = GetOccupiedCells(originCell, size);
 
         foreach (Vector3Int cell in occupiedCells)
@@ -318,6 +363,27 @@ public class BuilderManager : MonoBehaviour
         foreach (Vector3Int cell in GetOccupiedCells(originCell, size))
         {
             occupiedBlueprintCells.Remove(cell);
+        }
+    }
+
+    private void RotateSelectedBlueprint()
+    {
+        if (!SelectedBlueprintCanRotate()) return;
+
+        Blueprint blueprint = selectedBlueprintPrefab.GetComponent<Blueprint>();
+
+        int step = blueprint != null ? blueprint.rotationStep : 90;
+
+        currentRotation += step;
+
+        if (currentRotation >= 360f)
+        {
+            currentRotation = 0f;
+        }
+
+        if (previewObject != null)
+        {
+            previewObject.transform.rotation = Quaternion.Euler(0f, 0f, currentRotation);
         }
     }
 }

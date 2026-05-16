@@ -107,7 +107,10 @@ MonoBehaviour:
   resourcesDelivered: 0
   isCompleted: 0
   sizeInCells: {x: 2, y: 1}
+  canRotate: 1
+  rotationStep: 90
   cellPosition: {x: 0, y: 0, z: 0}
+  occupiedSize: {x: 0, y: 0}
 --- !u!61 &6486032254490179139
 BoxCollider2D:
   m_ObjectHideFlags: 0
