@@ -76,33 +76,33 @@ public class ColonistInfoPanel : MonoBehaviour
 
         if (goalText != null)
         {
-            goalText.text = brain != null ? $"Objetivo: {brain.GetCurrentGoalName()}" : "Objetivo: -";
+            goalText.text = brain != null ? $"Objetivo: \n{brain.GetCurrentGoalName()}" : "Objetivo: \n-";
         }
 
         if (actionText != null)
         {
-            actionText.text = brain != null ? $"Acción: {brain.GetCurrentActionName()}" : "Acción: -";
+            actionText.text = brain != null ? $"Acción: \n{brain.GetCurrentActionName()}" : "Acción: \n-";
         }
 
         if (planText != null)
         {
-            planText.text = brain != null ? $"Plan restante: {brain.GetCurrentPlanDescription()}" : "Plan restante: -";
+            planText.text = brain != null ? $"Plan restante: \n{brain.GetCurrentPlanDescription()}" : "Plan restante: \n-";
         }
 
         if (decisionText != null)
         {
-            decisionText.text = brain != null ? $"Decisión: {brain.GetCurrentDecisionReason()}" : "Decisión: -";
+            decisionText.text = brain != null ? $"Decisión: \n{brain.GetCurrentDecisionReason()}" : "Decisión: \n-";
         }
 
         if (modeText != null)
         {
             if (recruitment != null && recruitment.IsRecruited)
             {
-                modeText.text = "Modo: Reclutado";
+                modeText.text = "Reclutado";
             }
             else
             {
-                modeText.text = "Modo: Autónomo";
+                modeText.text = "Autónomo";
             }
         }
 
@@ -112,11 +112,11 @@ public class ColonistInfoPanel : MonoBehaviour
 
             if (carriedItem != null)
             {
-                handItemText.text = $"En mano: {carriedItem.itemID} x{carriedItem.amount}";
+                handItemText.text = $"{carriedItem.itemID} x{carriedItem.amount}";
             }
             else
             {
-                handItemText.text = "En mano: Nada";
+                handItemText.text = "Nada";
             }
         }
 
@@ -124,27 +124,27 @@ public class ColonistInfoPanel : MonoBehaviour
         {
             if (hungerText != null)
             {
-                hungerText.text = $"Hambre: {needs.hunger:0}";
+                hungerText.text = $"{needs.hunger:0}";
             }
             if (energyText != null)
             {
-                energyText.text = $"Energía: {needs.energy:0}";
+                energyText.text = $"{needs.energy:0}";
             }
             if (funText != null)
             {
-                funText.text = $"Diversión: {needs.fun:0}";
+                funText.text = $"{needs.fun:0}";
             }
             if (socialText != null)
             {
-                socialText.text = $"Social: {needs.social:0}";
+                socialText.text = $"{needs.social:0}";
             }
         }
         else
         {
-            if (hungerText != null) hungerText.text = "Hambre: -";
-            if (energyText != null) energyText.text = "Energía: -";
-            if (funText != null) funText.text = "Diversión: -";
-            if (socialText != null) socialText.text = "Social: -";
+            if (hungerText != null) hungerText.text = "-";
+            if (energyText != null) energyText.text = "-";
+            if (funText != null) funText.text = "-";
+            if (socialText != null) socialText.text = "-";
         }
     }
 }

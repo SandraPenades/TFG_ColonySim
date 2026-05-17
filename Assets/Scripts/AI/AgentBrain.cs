@@ -3,17 +3,27 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
+public enum WorkType
+{
+    Talar,
+    Minar,
+    Recolectar,
+    Transportar,
+    Cocinar,
+    Construir
+}
+
 [RequireComponent(typeof(AgentMovement))]
 [RequireComponent(typeof(WorldStateProvider))]
 public class AgentBrain : MonoBehaviour
 {
     [Header("Prioridades (0-5)")]
     public int prioridadTala = 1;
-    public int prioridadTransporte = 1;
-    public int prioridadMineria = 1;
     public int prioridadRecoleccion = 1;
-    public int prioridadSocializar = 1;
-    public int prioridadContruccion = 1;
+    public int prioridadMineria = 1;
+    public int prioridadTransporte = 1;
+    public int prioridadCocinar = 1;
+    public int prioridadConstruccion = 1;
 
     private AgentMovement movement;
     private AgentNeeds needs;
@@ -164,12 +174,12 @@ public class AgentBrain : MonoBehaviour
             ));
         }
 
-        if (currentState.GetState("has_build_job") && prioridadContruccion > 0)
+        if (currentState.GetState("has_build_job") && prioridadConstruccion > 0)
         {
             goals.Add(new GoapGoal(
                 "Construir blueprint",
                 new Dictionary<string, bool> { { "blueprint_finished", true } },
-                prioridadContruccion + 3
+                prioridadConstruccion + 3
             ));
         }
 
@@ -252,7 +262,8 @@ public class AgentBrain : MonoBehaviour
             else if (action is Action_Haul) action.cost = prioridadTransporte == 0 ? 0 : prioridadTransporte + 2;
             else if (action is Action_Mining) action.cost = prioridadMineria == 0 ? 0 : prioridadMineria + 2;
             else if (action is Action_Harvest) action.cost = prioridadRecoleccion == 0 ? 0 : prioridadRecoleccion + 2;
-            else if (action is Action_Build) action.cost = prioridadContruccion == 0 ? 0 : prioridadContruccion + 2;
+            else if (action is Action_Build) action.cost = prioridadConstruccion == 0 ? 0 : prioridadConstruccion + 2;
+            //else if (action is Action_Cook) action.cost = prioridadCocinar == 0 ? 0 : prioridadCocinar + 2;
             // AQUÍ SE AÑADEN LAS NUEVAS ACCIONES
 
             // Si no hay nada que hacer, que se de un paseo
@@ -305,6 +316,68 @@ public class AgentBrain : MonoBehaviour
         }
 
         currentGoal = null;
+    }
+
+    public int GetPriority(WorkType workType)
+    {
+        switch (workType)
+        {
+            case WorkType.Talar:
+                return prioridadTala;
+            case WorkType.Minar:
+                return prioridadMineria;
+            case WorkType.Recolectar:
+                return prioridadRecoleccion;
+            case WorkType.Transportar:
+                return prioridadTransporte;
+            case WorkType.Cocinar:
+                return prioridadCocinar;
+            case WorkType.Construir:
+                return prioridadConstruccion;
+            default:
+                return 0;
+        }
+    }
+
+    public void SetPriority(WorkType workType, int value)
+    {
+        value = Mathf.Clamp(value, 0, 5);
+
+        switch (workType)
+        {
+            case WorkType.Talar:
+                prioridadTala = value;
+                break;
+            case WorkType.Minar:
+                prioridadMineria = value;
+                break;
+            case WorkType.Recolectar:
+                prioridadRecoleccion = value;
+                break;
+            case WorkType.Transportar:
+                prioridadTransporte = value;
+                break;
+            case WorkType.Cocinar:
+                prioridadCocinar = value;
+                break;
+            case WorkType.Construir:
+                prioridadConstruccion = value;
+                break;
+        }
+
+        // Si cambia mientras el colono ya tiene plan
+        ClearCurrentPlan();
+        currentDecisionReason = "Pensando en otro plan";
+    }
+
+    public void IncreasePriorityValue(WorkType workType)
+    {
+        SetPriority(workType, GetPriority(workType) + 1);
+    }
+
+    public void DecreasePriorityValue(WorkType workType)
+    {
+        SetPriority(workType, GetPriority(workType) - 1);
     }
 
     private bool ShouldInterruptCurrentAction()
@@ -367,6 +440,8 @@ public class AgentBrain : MonoBehaviour
         if (action is Action_Haul) return "Trabajo: transporte";
         if (action is Action_Mining) return "Trabajo: minería";
         if (action is Action_Harvest) return "Trabajo: recolección";
+        if (action is Action_Build) return "Trabajo: construcción";
+        //if (action is Action_Cook) return "Trabajo: cocina";
         if (action is Action_Wander) return "Sin tareas disponibles";
 
         return "Acción seleccionada";
