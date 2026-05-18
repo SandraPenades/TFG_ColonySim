@@ -7,6 +7,7 @@ public class ConstructionManager : MonoBehaviour
     public static ConstructionManager Instance;
 
     private List<Blueprint> pendingBlueprints = new List<Blueprint>();
+    private List<ConstructedBuilding> pendingDeconstructions = new List<ConstructedBuilding>();
 
     private void Awake()
     {
@@ -14,6 +15,7 @@ public class ConstructionManager : MonoBehaviour
         else Destroy(gameObject);
     }
 
+    // CONSTRUCCIÓN
     public void RegisterBlueprint(Blueprint blueprint)
     {
         if (blueprint == null) return;
@@ -55,5 +57,66 @@ public class ConstructionManager : MonoBehaviour
         }
 
         return null;
+    }
+
+    // DECONSTRUCCIÓN
+    public void MarkForDeconstruction(ConstructedBuilding building)
+    {
+        if (building == null) return;
+        if (building.isMarkedForDeconstruction) return;
+
+        building.SetMarkedForDeconstruction(true);
+        building.isReservedForDeconstruction = false;
+
+        if (!pendingDeconstructions.Contains(building))
+        {
+            pendingDeconstructions.Add(building);
+        }
+    }
+
+    public void UnmarkForDeconstruction(ConstructedBuilding building)
+    {
+        if (building == null) return;
+        if (building.isReservedForDeconstruction) return;
+
+        building.SetMarkedForDeconstruction(false);
+        building.isReservedForDeconstruction = false;
+
+        pendingDeconstructions.Remove(building);
+    }
+
+    public bool HasPendingDeconstruction()
+    {
+        foreach (ConstructedBuilding building in pendingDeconstructions)
+        {
+            if (building == null) continue;
+            if (!building.isMarkedForDeconstruction) continue;
+            if (building.isReservedForDeconstruction) continue;
+
+            return true;
+        }
+
+        return false;
+    }
+
+    public ConstructedBuilding GetFirstPendingDeconstruction()
+    {
+        foreach (ConstructedBuilding building in pendingDeconstructions)
+        {
+            if (building == null) continue;
+            if (!building.isMarkedForDeconstruction) continue;
+            if (building.isReservedForDeconstruction) continue;
+
+            return building;
+        }
+
+        return null;
+    }
+
+    public void CompleteDeconstruction(ConstructedBuilding building)
+    {
+        if (building == null) return;
+
+        pendingDeconstructions.Remove(building);
     }
 }

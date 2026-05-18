@@ -150,7 +150,7 @@ public class BuilderManager : MonoBehaviour
         mouseWorldPos.z = 0;
 
         Vector3Int cellPos = mainGrid.WorldToCell(mouseWorldPos);
-        Vector3 placeWorldPos = mainGrid.GetCellCenterWorld(cellPos);
+        Vector3 placeWorldPos = GetRotatedPlacementPosition(cellPos);
 
         previewObject.transform.position = placeWorldPos;
 
@@ -160,6 +160,42 @@ public class BuilderManager : MonoBehaviour
         {
             previewRenderer.color = canPlace ? validPreviewColor : invalidPreviewColor;
         }
+    }
+
+    private Vector3 GetRotatedPlacementPosition(Vector3Int cellPos)
+    {
+        Vector3 basePos = mainGrid.GetCellCenterWorld(cellPos);
+
+        Vector2Int originalSize = GetSelectedBlueprintSize();
+        Vector2Int rotatedSize = GetSelectedBlueprintSizeWithRotation();
+
+        if (!SelectedBlueprintCanRotate())
+        {
+            return basePos;
+        }
+
+        int normalizedRotation = Mathf.RoundToInt(currentRotation) % 360;
+
+        if (normalizedRotation < 0)
+        {
+            normalizedRotation += 360;
+        }
+
+        Vector3 offset = Vector3.zero;
+
+        if (originalSize.x == 2 && originalSize.y == 1)
+        {
+            if (normalizedRotation == 90)
+            {
+                offset = new Vector3(0.5f, -0.5f, 0f);
+            }
+            else if (normalizedRotation == 270)
+            {
+                offset = new Vector3(-0.5f, 0.5f, 0f);
+            }
+        }
+
+        return basePos + offset;
     }
 
     public void CancelBuildMode()
@@ -181,7 +217,7 @@ public class BuilderManager : MonoBehaviour
         mouseWorldPos.z = 0;
 
         Vector3Int cellPos = mainGrid.WorldToCell(mouseWorldPos);
-        Vector3 placeWorldPos = mainGrid.GetCellCenterWorld(cellPos);
+        Vector3 placeWorldPos = GetRotatedPlacementPosition(cellPos);
 
         if (!CanPlaceAt(cellPos))
         {

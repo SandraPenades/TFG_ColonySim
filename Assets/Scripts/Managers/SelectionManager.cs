@@ -16,6 +16,7 @@ public class SelectionManager : MonoBehaviour
     private GameObject selectedColonist;
     private AgentMovement selectedColonistMovement;
     private ColonistRecruitment selectedColonistRecruitment;
+    private ConstructedBuilding selectedBuilding;
 
     private bool isColonistSelected = false;
 
@@ -47,6 +48,23 @@ public class SelectionManager : MonoBehaviour
             return;
         }
 
+        // Si hacemos clic en una construcción
+        if (hit.collider != null)
+        {
+            ConstructedBuilding building = hit.collider.GetComponent<ConstructedBuilding>();
+
+            if (building == null)
+            {
+                building = hit.collider.GetComponentInParent<ConstructedBuilding>();
+            }
+
+            if (building != null)
+            {
+                SelectBuilding(building);
+                return;
+            }
+        }
+
         // Si hacemos clic en el vacío
         DeselectAll();
     }
@@ -73,7 +91,10 @@ public class SelectionManager : MonoBehaviour
         if (UIManager.Instance != null) 
         {
             UIManager.Instance.CloseZoneMenu();
+            UIManager.Instance.CloseBuildMenu();
         }
+
+        selectedBuilding = null;
 
         selectedColonist = colono;
         selectedColonistMovement = colono.GetComponent<AgentMovement>();
@@ -91,7 +112,27 @@ public class SelectionManager : MonoBehaviour
             workPriorityPanel.SetColonist(colono);
         }
 
-        UpdateRecruitButtonText();
+        UpdateActionButtonText();
+    }
+
+    void SelectBuilding(ConstructedBuilding building)
+    {
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.CloseZoneMenu();
+            UIManager.Instance.CloseBuildMenu();
+        }
+
+        selectedColonist = null;
+        selectedColonistMovement = null;
+        selectedColonistRecruitment = null;
+
+        selectedBuilding = building;
+
+        isColonistSelected = false;
+        actionMenuPanel.SetActive(true);
+
+        UpdateActionButtonText();
     }
 
     public void DeselectAll()
@@ -99,14 +140,21 @@ public class SelectionManager : MonoBehaviour
         selectedColonist = null;
         selectedColonistMovement = null;
         selectedColonistRecruitment = null;
+        selectedBuilding = null;
         
         isColonistSelected = false;
         actionMenuPanel.SetActive(false);
+
+        if (actionMenuPanel != null)
+        {
+            actionMenuPanel.SetActive(false);
+        }
 
         if (colonistInfoPanel != null)
         {
             colonistInfoPanel.ClearPanel();
         }
+
         if (workPriorityPanel != null)
         {
             workPriorityPanel.ClearPanel();
@@ -115,24 +163,51 @@ public class SelectionManager : MonoBehaviour
 
     void OnActionButtonClicked()
     {
-        if (!isColonistSelected) return;
-        if (selectedColonistRecruitment == null) return;
-
-        selectedColonistRecruitment.ToggleRecruitment();
-
-        UpdateRecruitButtonText();
+        if (selectedColonistRecruitment != null)
+        {
+            selectedColonistRecruitment.ToggleRecruitment();
+            UpdateActionButtonText();
+            return;
+        } 
+        if (selectedBuilding != null)
+        {
+            ToggleBuildDeconstruction();
+            UpdateActionButtonText();
+            return;
+        } 
     }
 
-    void UpdateRecruitButtonText()
+    void UpdateActionButtonText()
     {
         if (actionText == null) return;
 
-        if (!isColonistSelected || selectedColonistRecruitment == null)
+        if (selectedColonistRecruitment != null)
         {
-            actionText.text = "Reclutar";
+            actionText.text = selectedColonistRecruitment.IsRecruited ? "Licenciar" : "Reclutar";
             return;
         }
 
-        actionText.text = selectedColonistRecruitment.IsRecruited ? "Licenciar" : "Reclutar";
+        if (selectedBuilding != null)
+        {
+            actionText.text = selectedBuilding.isMarkedForDeconstruction ? "Cancelar" : "Deconstruir";
+            return;
+        }
+
+        actionText.text = "";
+    }
+
+    private void ToggleBuildDeconstruction()
+    {
+        if (selectedBuilding == null) return;
+        if (ConstructionManager.Instance == null) return;
+
+        if (selectedBuilding.isMarkedForDeconstruction)
+        {
+            ConstructionManager.Instance.UnmarkForDeconstruction(selectedBuilding);
+        }
+        else
+        {
+            ConstructionManager.Instance.MarkForDeconstruction(selectedBuilding);
+        }
     }
 }

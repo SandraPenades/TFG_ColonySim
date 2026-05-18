@@ -137,7 +137,23 @@ public class Action_Build : GoapAction
 
         if (currentBlueprint.finalPrefab != null)
         {
-            Instantiate(currentBlueprint.finalPrefab, currentBlueprint.transform.position, currentBlueprint.transform.rotation);
+            GameObject finalBuilding = Instantiate(currentBlueprint.finalPrefab, currentBlueprint.transform.position, currentBlueprint.transform.rotation);
+
+            ConstructedBuilding constructedBuilding = finalBuilding.GetComponent<ConstructedBuilding>();
+
+            if (constructedBuilding != null)
+            {
+                constructedBuilding.originalResources.Clear();
+
+                foreach (RequiredResource required in currentBlueprint.requiredResources)
+                {
+                    RequiredResource copy = new RequiredResource();
+                    copy.itemID = required.itemID;
+                    copy.amount = required.amount;
+
+                    constructedBuilding.originalResources.Add(copy);
+                }
+            }
         }
 
         yield return null;

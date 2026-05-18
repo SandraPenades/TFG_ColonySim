@@ -174,6 +174,15 @@ public class AgentBrain : MonoBehaviour
             ));
         }
 
+        if (currentState.GetState("has_deconstruction_job") && prioridadConstruccion > 0)
+        {
+            goals.Add(new GoapGoal(
+                "Deconstruir edificio",
+                new Dictionary<string, bool> { { "building_deconstructed", true } },
+                prioridadConstruccion + 2
+            ));
+        }
+
         if (currentState.GetState("has_build_job") && prioridadConstruccion > 0)
         {
             goals.Add(new GoapGoal(
@@ -263,6 +272,7 @@ public class AgentBrain : MonoBehaviour
             else if (action is Action_Mining) action.cost = prioridadMineria == 0 ? 0 : prioridadMineria + 2;
             else if (action is Action_Harvest) action.cost = prioridadRecoleccion == 0 ? 0 : prioridadRecoleccion + 2;
             else if (action is Action_Build) action.cost = prioridadConstruccion == 0 ? 0 : prioridadConstruccion + 2;
+            else if (action is Action_Deconstruct) action.cost = prioridadConstruccion == 0 ? 0 : prioridadConstruccion + 2;
             //else if (action is Action_Cook) action.cost = prioridadCocinar == 0 ? 0 : prioridadCocinar + 2;
             // AQUÍ SE AÑADEN LAS NUEVAS ACCIONES
 
@@ -441,6 +451,7 @@ public class AgentBrain : MonoBehaviour
         if (action is Action_Mining) return "Trabajo: minería";
         if (action is Action_Harvest) return "Trabajo: recolección";
         if (action is Action_Build) return "Trabajo: construcción";
+        if (action is Action_Deconstruct) return "Trabajo: deconstrucción";
         //if (action is Action_Cook) return "Trabajo: cocina";
         if (action is Action_Wander) return "Sin tareas disponibles";
 

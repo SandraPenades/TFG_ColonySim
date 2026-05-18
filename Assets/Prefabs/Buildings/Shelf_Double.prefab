@@ -43,7 +43,8 @@ GameObject:
   - component: {fileID: 4740122866149627399}
   - component: {fileID: 5260090142817181393}
   - component: {fileID: 2488277346791597928}
-  m_Layer: 0
+  - component: {fileID: -7876006346655943314}
+  m_Layer: 8
   m_Name: Shelf_Double
   m_TagString: Storage
   m_Icon: {fileID: 0}
@@ -181,3 +182,19 @@ MonoBehaviour:
   visualSlotPrefab: {fileID: 8416041813609969939, guid: dac3ca94b4b5c96478d93cc865cd2480, type: 3}
   container: {fileID: 9085387846166753745}
   maxSlots: 5
+--- !u!114 &-7876006346655943314
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5320218469896194342}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9928cd4a1153f0849b466868e691c817, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  buildingName: "Estanter\xEDa"
+  originalResources: []
+  isMarkedForDeconstruction: 0
+  isReservedForDeconstruction: 0

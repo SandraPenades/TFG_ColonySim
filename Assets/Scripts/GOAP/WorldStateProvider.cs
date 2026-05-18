@@ -26,6 +26,7 @@ public class WorldStateProvider : MonoBehaviour
         state.SetState("has_haul_job", JobManager.Instance != null && JobManager.Instance.HasPendingJob(Job.JobType.Transportar));
         state.SetState("has_harvest_job", JobManager.Instance != null && JobManager.Instance.HasPendingJob(Job.JobType.Recolectar));
         state.SetState("has_build_job", ConstructionManager.Instance != null && ConstructionManager.Instance.HasPendingBlueprint());
+        state.SetState("has_deconstruction_job", ConstructionManager.Instance != null && ConstructionManager.Instance.HasPendingDeconstruction());
 
         // Recursos y almacenamiento
         state.SetState("has_loose_resource", CheckLooseResourceAvailable());

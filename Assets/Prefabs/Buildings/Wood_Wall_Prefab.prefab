@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 4237729043354637950}
   - component: {fileID: -6070975687120190590}
   - component: {fileID: 5551816771939317045}
+  - component: {fileID: 1052861762911484227}
   m_Layer: 8
   m_Name: Wood_Wall_Prefab
   m_TagString: Untagged
@@ -147,3 +148,19 @@ MonoBehaviour:
   m_Area: 1
   m_IgnoreFromBuild: 0
   m_AffectedAgents: ffffffff
+--- !u!114 &1052861762911484227
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6003673874499218854}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9928cd4a1153f0849b466868e691c817, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  buildingName: Muro de madera
+  originalResources: []
+  isMarkedForDeconstruction: 0
+  isReservedForDeconstruction: 0
