@@ -8,6 +8,7 @@ public class UIManager : MonoBehaviour
 
     public GameObject zoneMenuPanel;
     public GameObject buildMenuPanel;
+    public GameObject actionMenuPanel;
 
     public SelectionManager selectionManager;
     public MouseController mouseController;
@@ -121,6 +122,33 @@ public class UIManager : MonoBehaviour
         if (BuilderManager.Instance != null)
         {
             BuilderManager.Instance.CancelBuildMode();
+        }
+    }
+
+    public bool IsAnyGameplayPanelOpen()
+    {
+        bool zoneOpen = zoneMenuPanel != null && zoneMenuPanel.activeSelf;
+        bool buildOpen = buildMenuPanel != null && buildMenuPanel.activeSelf;
+        bool actionOpen = actionMenuPanel != null && actionMenuPanel.activeSelf;
+
+        return zoneOpen || buildOpen || actionOpen;
+    }
+
+    public void CloseOpenGameplayPanels()
+    {
+        if (zoneMenuPanel != null && zoneMenuPanel.activeSelf)
+        {
+            CloseZoneMenu();
+        }
+
+        if (buildMenuPanel != null && buildMenuPanel.activeSelf)
+        {
+            CloseBuildMenu();
+        }
+
+        if (actionMenuPanel != null && actionMenuPanel.activeSelf)
+        {
+            actionMenuPanel.SetActive(false);
         }
     }
 }
