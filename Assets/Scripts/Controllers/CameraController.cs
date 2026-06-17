@@ -56,8 +56,8 @@ public class CameraController : MonoBehaviour
         // Normalizamos para que no vaya más rápido al moverse en diagonal
         Vector3 moveDirection = new Vector3(moveX, moveY, 0).normalized;
 
-        // Movemos la cámara independientemente de los FPS (Time.deltaTime)
-        transform.position += moveDirection * moveSpeed * Time.deltaTime;
+        // Movemos la cámara independientemente de los FPS (Time.unscaledDeltaTime)
+        transform.position += moveDirection * moveSpeed * Time.unscaledDeltaTime;
     }
 
     void ZoomCamera()

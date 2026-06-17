@@ -10,6 +10,8 @@ public class Action_Haul : GoapAction
     private GameObject targetItem;
     private StorageBuilding targetStorage;
     private bool hasStarted = false;
+
+    [Header("Detección de recursos")]
     public LayerMask itemLayer;
 
     protected override void Awake()
@@ -26,40 +28,41 @@ public class Action_Haul : GoapAction
 
     public override bool CheckProceduralPrecondition(GameObject agent)
     {
-        currentJob = JobManager.Instance.GetNextJob(Job.JobType.Transportar, agent.transform.position);
+        currentJob = JobManager.Instance.ReserveNextJob(Job.JobType.Transportar, agent.transform.position);
 
-        if (currentJob != null)
+        if (currentJob == null)
+            return false;
+
+        Vector2 searchPos = new Vector2(currentJob.position.x, currentJob.position.y);
+
+        Collider2D[] hits = Physics2D.OverlapCircleAll(searchPos, 1.5f, itemLayer);
+        targetStorage = FindObjectOfType<StorageBuilding>();
+
+        if (targetStorage == null)
         {
-            Vector2 searchPos = new Vector2(currentJob.position.x, currentJob.position.y);
-            
-            // Este radar atravesará al colono y chocará con los Items.
-            Collider2D[] hits = Physics2D.OverlapCircleAll(searchPos, 1.5f, itemLayer);
-            targetStorage = FindObjectOfType<StorageBuilding>();
+            currentJob.state = Job.JobState.Pendiente;
+            currentJob = null;
+            return false;
+        }
 
-            if (targetStorage == null) return false;
+        foreach (Collider2D hit in hits)
+        {
+            ResourceItem itemData = hit.GetComponent<ResourceItem>();
+            if (itemData == null) continue;
 
-            foreach (Collider2D hit in hits)
+            if (!string.IsNullOrEmpty(currentJob.itemID) && itemData.itemID != currentJob.itemID)
+                continue;
+
+            if (targetStorage.CanAcceptItem(itemData.itemID, itemData.amount))
             {
-                ResourceItem itemData = hit.GetComponent<ResourceItem>();
-
-                if (itemData == null) continue;
-
-                // Si el trabajo especifica un itemID y este ítem no coincide, lo ignoramos.
-                if (!string.IsNullOrEmpty(currentJob.itemID) && itemData.itemID != currentJob.itemID)
-                {
-                    continue;
-                }
-
-                // Si el almacén acepta este tipo de ítem, lo usamos como objetivo.
-                if (targetStorage.CanAcceptItem(itemData.itemID))
-                {
-                    targetItem = hit.gameObject;
-                    targetPosition = currentJob.position;
-                    return true;
-                }
-
+                targetItem = hit.gameObject;
+                targetPosition = currentJob.position;
+                return true;
             }
         }
+
+        currentJob.state = Job.JobState.Pendiente;
+        currentJob = null;
         return false;
     }
 
@@ -84,14 +87,22 @@ public class Action_Haul : GoapAction
         AgentMovement movement = agent.GetComponent<AgentMovement>();
 
         // 1. Que empiece a caminar
-        if (targetItem != null)
-        {
-            movement.MoveTo(targetItem.transform.position);
-        }
+        movement.MoveTo(targetItem.transform.position);
+
+        float moveTimer = 0f;
+        float maxMoveTime = 8f;
 
         // 2. Ir a por el objeto
-        while (targetItem != null && Vector3.Distance(agent.transform.position, targetItem.transform.position) > 1.5f)
+        while (targetItem != null && !movement.HasReachedDestination())
         {
+            moveTimer += Time.deltaTime;
+
+            if (moveTimer >= maxMoveTime)
+            {
+                FailHaul();
+                yield break;
+            }
+
             // Debug.Log($"Pepe está a {Vector3.Distance(agent.transform.position, targetItem.transform.position)} metros del objeto");
             yield return null;
         }
@@ -115,9 +126,19 @@ public class Action_Haul : GoapAction
             
             // 3. Ir a la estantería
             movement.MoveTo(targetStorage.transform.position);
-            
-            while (Vector3.Distance(agent.transform.position, targetStorage.transform.position) > 1.5f)
+
+            moveTimer = 0f;
+
+            while (!movement.HasReachedDestination())
             {
+                moveTimer += Time.deltaTime;
+
+                if (moveTimer >= maxMoveTime)
+                {
+                    FailHaul();
+                    yield break;
+                }
+
                 yield return null;
             }
 
@@ -126,17 +147,44 @@ public class Action_Haul : GoapAction
 
             // 4. Guardar en el inventario
             ResourceItem itemData = targetItem.GetComponent<ResourceItem>();
-            string itemName = "desconocido";
 
-            if (itemData != null)
+            if (itemData == null)
             {
-                itemName = itemData.itemID;
+                FailHaul();
+                yield break;
             }
 
-            targetStorage.AddItem(itemName, itemData.amount);
+            int leftover = targetStorage.AddItem(itemData.itemID, itemData.amount);
 
-            Destroy(targetItem);
-            targetItem = null;
+            if (leftover <= 0)
+            {
+                Destroy(targetItem);
+                targetItem = null;
+            }
+            else
+            {
+                itemData.SetAmount(leftover);
+
+                Collider2D col = targetItem.GetComponent<Collider2D>();
+                if (col != null) col.enabled = true;
+
+                targetItem.transform.SetParent(null);
+
+                Vector3 currentPos = targetItem.transform.position;
+                targetItem.transform.position = new Vector3(currentPos.x, currentPos.y, 0f);
+
+                if (currentJob != null)
+                {
+                    currentJob.state = Job.JobState.Pendiente;
+                    currentJob.position = new Vector3Int(Mathf.RoundToInt(targetItem.transform.position.x), Mathf.RoundToInt(targetItem.transform.position.y), 0);
+                }
+
+                targetItem = null;
+                targetStorage = null;
+                currentJob = null;
+                isDone = true;
+                yield break;
+            }
 
             if (currentJob != null) 
             {
@@ -152,6 +200,43 @@ public class Action_Haul : GoapAction
         }
         
         isDone = true;
+    }
+
+    private void FailHaul()
+    {
+        if (targetItem != null)
+        {
+            if (targetItem.transform.parent != null)
+            {
+                targetItem.transform.SetParent(null);
+
+                Vector3 currentPos = targetItem.transform.position;
+                targetItem.transform.position = new Vector3(currentPos.x, currentPos.y, 0f);
+            }
+
+            Collider2D col = targetItem.GetComponent<Collider2D>();
+            if (col != null) col.enabled = true;
+        }
+
+        if (currentJob != null)
+        {
+            currentJob.state = Job.JobState.Pendiente;
+
+            if (targetItem != null)
+            {
+                currentJob.position = new Vector3Int(
+                    Mathf.RoundToInt(targetItem.transform.position.x),
+                    Mathf.RoundToInt(targetItem.transform.position.y),
+                    0
+                );
+            }
+        }
+
+        targetItem = null;
+        targetStorage = null;
+        currentJob = null;
+        isDone = true;
+        hasStarted = false;
     }
 
     public override void ResetAction()

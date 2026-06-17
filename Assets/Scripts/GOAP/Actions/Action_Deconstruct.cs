@@ -73,6 +73,13 @@ public class Action_Deconstruct : GoapAction
             ConstructionManager.Instance.CompleteDeconstruction(currentBuilding);
         }
 
+        Wall wallPiece = currentBuilding.GetComponent<Wall>();
+
+        if (wallPiece != null && WallManager.Instance != null)
+        {
+            WallManager.Instance.UnregisterWall(wallPiece);
+        }
+
         Destroy(currentBuilding.gameObject);
 
         yield return null;

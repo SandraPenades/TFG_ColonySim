@@ -9,7 +9,6 @@ public enum WorkType
     Minar,
     Recolectar,
     Transportar,
-    Cocinar,
     Construir
 }
 
@@ -22,7 +21,6 @@ public class AgentBrain : MonoBehaviour
     public int prioridadRecoleccion = 1;
     public int prioridadMineria = 1;
     public int prioridadTransporte = 1;
-    public int prioridadCocinar = 1;
     public int prioridadConstruccion = 1;
 
     private AgentMovement movement;
@@ -38,11 +36,14 @@ public class AgentBrain : MonoBehaviour
 
     private string currentDecisionReason = "Sin decisión";
 
+    private ColonistThoughtBubble thoughtBubble;
+
     void Start()
     {
         movement = GetComponent<AgentMovement>();
         needs = GetComponent<AgentNeeds>();
         worldStateProvider = GetComponent<WorldStateProvider>();
+        thoughtBubble = GetComponent<ColonistThoughtBubble>();
 
         availableActions = GetComponents<GoapAction>().ToList(); // En lista para poder ordenarla
         planner = new GoapPlanner();
@@ -61,7 +62,7 @@ public class AgentBrain : MonoBehaviour
 
                 AbortCurrentAction();
 
-                Debug.Log($"[AgentBrain] Interrumpiendo acción '{interruptedActionName}' por necesidad crítica.");
+                // Debug.Log($"[AgentBrain] Interrumpiendo acción '{interruptedActionName}' por necesidad crítica.");
                 return;
             }
 
@@ -105,7 +106,7 @@ public class AgentBrain : MonoBehaviour
 
                 currentDecisionReason = $"Objetivo: {currentGoal.goalName}";
 
-                Debug.Log($"[AgentBrain] {gameObject.name} selecciona objetivo: {currentGoal.goalName}");
+                // Debug.Log($"[AgentBrain] {gameObject.name} selecciona objetivo: {currentGoal.goalName}");
 
                 ExecuteNextActionInPlan();
                 return;
@@ -120,7 +121,8 @@ public class AgentBrain : MonoBehaviour
     {
         List<GoapGoal> goals = new List<GoapGoal>();
 
-        if (needs != null && needs.IsHungry())
+        // Si tiene hambre, el objetivo es comer
+        if (needs != null && needs.IsHungry() && currentState.GetState("has_food_available"))
         {
             goals.Add(new GoapGoal(
                 "Comer", 
@@ -129,94 +131,129 @@ public class AgentBrain : MonoBehaviour
             ));
         }
 
-        if (needs != null && needs.IsSleepy())
+        // Si tiene sueño, el objetivo es dormir
+        if (needs != null && needs.IsSleepy() && currentState.GetState("has_free_bed"))
         {
             goals.Add(new GoapGoal(
                 "Dormir", 
                 new Dictionary<string, bool> { { "is_rested", true } }, 
-                1
+                2
             ));
         }
 
+        // Si no tiene socialización, el objetivo es socializar
+        if (needs != null && needs.IsLonely())
+        {
+            goals.Add(new GoapGoal(
+                "Socializar",
+                new Dictionary<string, bool> { { "is_socialized", true } },
+                3
+            ));
+        }
+
+        // Si está aburrido, el objetivo es divertirse
+        if (needs != null && needs.IsBored())
+        {
+            goals.Add(new GoapGoal(
+                "Divertirse",
+                new Dictionary<string, bool> { { "is_entertained", true } },
+                4
+            ));
+        }
+
+        // Si tiene un objeto en el suelo y puede transportar, el objetivo es transportar el recurso
         if (currentState.GetState("has_loose_resource") && prioridadTransporte > 0)
         {
             goals.Add(new GoapGoal(
                 "Almacenar recursos", 
                 new Dictionary<string, bool> { { "resources_stored", true } }, 
-                prioridadTransporte + 2
+                prioridadTransporte + 5
             ));
         }
 
+        // Si hay un trabajo de tala y puede talar, el objetivo es talar
         if (currentState.GetState("has_tree_job") && prioridadTala > 0)
         {
             goals.Add(new GoapGoal(
-                "Talar y almacenar madera", 
-                new Dictionary<string, bool> { {"has_loose_wood", true},  { "resources_stored", true } }, 
-                prioridadTala + 3
+                "Talar madera", 
+                new Dictionary<string, bool> { {"has_loose_wood", true} }, 
+                prioridadTala + 5
             ));
         }
 
+        // Si hay un trabajo de minería y puede minar, el objetivo es minar
         if (currentState.GetState("has_mining_job") && prioridadMineria > 0)
         {
             goals.Add(new GoapGoal(
-                "Minar y almacenar piedra", 
-                new Dictionary<string, bool> { {"has_loose_stone", true},  { "resources_stored", true } }, 
-                prioridadMineria + 3
+                "Minar piedra", 
+                new Dictionary<string, bool> { {"has_loose_stone", true} }, 
+                prioridadMineria + 5
             ));
         }
 
+        // Si hay un trabajo de recolección y puede recolectar, el objetivo es recolectar
         if (currentState.GetState("has_harvest_job") && prioridadRecoleccion > 0)
         {
             goals.Add(new GoapGoal(
-                "Recolectar y almacenar comida", 
-                new Dictionary<string, bool> { {"has_loose_food", true}, { "resources_stored", true } }, 
-                prioridadRecoleccion + 3
+                "Recolectar comida", 
+                new Dictionary<string, bool> { {"has_loose_food", true} }, 
+                prioridadRecoleccion + 5
             ));
         }
 
+        // Si hay un trabajo de deconstrucción y puede construir, el objetivo es deconstruir
         if (currentState.GetState("has_deconstruction_job") && prioridadConstruccion > 0)
         {
             goals.Add(new GoapGoal(
                 "Deconstruir edificio",
                 new Dictionary<string, bool> { { "building_deconstructed", true } },
-                prioridadConstruccion + 2
+                prioridadConstruccion + 5
             ));
         }
 
-        if (currentState.GetState("has_build_job") && prioridadConstruccion > 0)
+        // Si hay un trabajo de construcción, tiene recursos y puede construir, el objetivo es construir
+        if (currentState.GetState("has_build_job") && currentState.GetState("has_required_build_resources") && prioridadConstruccion > 0)
         {
             goals.Add(new GoapGoal(
                 "Construir blueprint",
                 new Dictionary<string, bool> { { "blueprint_finished", true } },
-                prioridadConstruccion + 3
+                prioridadConstruccion + 5
             ));
         }
 
-        // De momento socialización y diversión pueden quedarse fuera hasta que estén implementadas
-        // if (needs != null && needs.IsLonely())
-        // {
-        //     goals.Add(new GoapGoal(
-        //         "Socializar",
-        //         new Dictionary<string, bool> { { "is_socialized", true } },
-        //         prioridadSocializar + 2
-        //     ));
-        // }
+        // Objetivos más complejos
+        if (currentState.GetState("has_build_job") && 
+            !currentState.GetState("has_required_build_resources") &&
+            currentState.GetState("missing_wood_for_build") &&
+            currentState.GetState("has_tree_job") &&
+            prioridadConstruccion > 0 && prioridadTala > 0 && prioridadTransporte > 0)
+        {
+            goals.Add(new GoapGoal(
+                "Preparar madera para construcción",
+                new Dictionary<string, bool> { { "resources_stored", true } },
+                prioridadConstruccion + 4
+            ));
+        }
 
-        // if (needs != null && needs.IsBored())
-        // {
-        //     goals.Add(new GoapGoal(
-        //         "Divertirse",
-        //         new Dictionary<string, bool> { { "is_not_bored", true } },
-        //         prioridadDivertirse + 2
-        //     ));
-        // }
+        if (currentState.GetState("has_build_job") && 
+            !currentState.GetState("has_required_build_resources") &&
+            currentState.GetState("missing_stone_for_build") &&
+            currentState.GetState("has_mining_job") &&
+            prioridadConstruccion > 0 && prioridadMineria > 0 && prioridadTransporte > 0)
+        {
+            goals.Add(new GoapGoal(
+                "Preparar piedra para construcción",
+                new Dictionary<string, bool> { { "resources_stored", true } },
+                prioridadConstruccion + 4
+            ));
+        }
 
-        Debug.Log(
-            $"[Jobs] Tala:{JobManager.Instance.CountPendingJobs(Job.JobType.Talar)} " +
-            $"Minería:{JobManager.Instance.CountPendingJobs(Job.JobType.Minar)} " +
-            $"Recolección:{JobManager.Instance.CountPendingJobs(Job.JobType.Recolectar)} " +
-            $"Transporte:{JobManager.Instance.CountPendingJobs(Job.JobType.Transportar)}"
-        );
+        // Debug.Log(
+        //     $"[Jobs] Tala:{JobManager.Instance.CountPendingJobs(Job.JobType.Talar)} " +
+        //     $"Minería:{JobManager.Instance.CountPendingJobs(Job.JobType.Minar)} " +
+        //     $"Recolección:{JobManager.Instance.CountPendingJobs(Job.JobType.Recolectar)} " +
+        //     $"Transporte:{JobManager.Instance.CountPendingJobs(Job.JobType.Transportar)}"
+        // );
 
         return goals;
 
@@ -236,17 +273,21 @@ public class AgentBrain : MonoBehaviour
         // Comprobamos qué acción puede ejecutarse físicamente en Unity
         if (!nextAction.CheckProceduralPrecondition(gameObject))
         {
-            Debug.Log($"[AgentBrain] La acción '{nextAction.actionName}' ya no es válida. Replanificando...");
-
             ClearCurrentPlan();
-            CreateAndStartNewPlan();
+            currentAction = null;
+            currentDecisionReason = $"No se pudo ejecutar: {nextAction.actionName}";
             return;
         }
 
         currentAction = nextAction;
         currentDecisionReason = currentGoal != null ? $"Objetivo: {currentGoal.goalName}" : GetDecisionReason(currentAction);
 
-        Debug.Log($"[AgentBrain] Ejecutando acción: {currentAction.actionName}");
+        // Debug.Log($"[AgentBrain] Ejecutando acción: {currentAction.actionName}");
+
+        if (thoughtBubble != null)
+        {
+            thoughtBubble.ShowThought(currentAction.actionName);
+        }
 
         currentAction.Perform(gameObject);
     }
@@ -257,14 +298,12 @@ public class AgentBrain : MonoBehaviour
         
         foreach (var action in availableActions)
         {
-            // Las acciones que tienen que ver con las necesidades de hambre y sueño, se priorizarán con 1
+            // Las acciones que tienen que ver con las necesidades, se priorizarán con 1
             // o se desactivarán con 0.
             if (action is Action_Eat) action.cost = needs.IsHungry() ? 1 : 0;
             else if (action is Action_Sleep) action.cost = needs.IsSleepy() ? 1 : 0;
-
-            // Segunda capa de las necesidades urgentes (menos urgentes que las primeras)
-            else if (action is Action_HaveFun) action.cost = 0;
-            else if (action is Action_Chat) action.cost = 0;
+            else if (action is Action_HaveFun) action.cost = needs.IsBored() ? 1 : 0;
+            else if (action is Action_Chat) action.cost = needs.IsLonely() ? 1 : 0;
 
             // Las demás acciones siempre valdrán más de 1 (si no es 0) para que las necesidades vayan primero.
             else if (action is Action_ChopTree) action.cost = prioridadTala == 0 ? 0 : prioridadTala + 2;
@@ -273,8 +312,6 @@ public class AgentBrain : MonoBehaviour
             else if (action is Action_Harvest) action.cost = prioridadRecoleccion == 0 ? 0 : prioridadRecoleccion + 2;
             else if (action is Action_Build) action.cost = prioridadConstruccion == 0 ? 0 : prioridadConstruccion + 2;
             else if (action is Action_Deconstruct) action.cost = prioridadConstruccion == 0 ? 0 : prioridadConstruccion + 2;
-            //else if (action is Action_Cook) action.cost = prioridadCocinar == 0 ? 0 : prioridadCocinar + 2;
-            // AQUÍ SE AÑADEN LAS NUEVAS ACCIONES
 
             // Si no hay nada que hacer, que se de un paseo
             else if (action is Action_Wander) action.cost = 0; // Esta acción no entra en el GOAP por lo que no tiene coste en el plan
@@ -290,6 +327,11 @@ public class AgentBrain : MonoBehaviour
             currentAction = wanderAction;
             currentGoal = null;
             currentDecisionReason = "Sin plan: deambular";
+
+            if (thoughtBubble != null)
+            {
+                thoughtBubble.ShowThought(currentAction.actionName);
+            }
 
             currentAction.Perform(gameObject);
         }
@@ -311,6 +353,11 @@ public class AgentBrain : MonoBehaviour
         if (movement != null)
         {
             movement.StopMoving();
+        }
+
+        if (thoughtBubble != null)
+        {
+            thoughtBubble.HideThought();
         }
 
         ClearCurrentPlan();
@@ -340,8 +387,6 @@ public class AgentBrain : MonoBehaviour
                 return prioridadRecoleccion;
             case WorkType.Transportar:
                 return prioridadTransporte;
-            case WorkType.Cocinar:
-                return prioridadCocinar;
             case WorkType.Construir:
                 return prioridadConstruccion;
             default:
@@ -367,9 +412,6 @@ public class AgentBrain : MonoBehaviour
             case WorkType.Transportar:
                 prioridadTransporte = value;
                 break;
-            case WorkType.Cocinar:
-                prioridadCocinar = value;
-                break;
             case WorkType.Construir:
                 prioridadConstruccion = value;
                 break;
@@ -392,27 +434,27 @@ public class AgentBrain : MonoBehaviour
 
     private bool ShouldInterruptCurrentAction()
     {
-        AgentNeeds needs = GetComponent<AgentNeeds>();
-
         if (needs == null) return false;
+        if (worldStateProvider == null) return false;
 
-        bool criticalHunger = needs.hunger <= 0f && !(currentAction is Action_Eat) && CanPerformAction<Action_Eat>();
-        bool criticalEnergy = needs.energy <= 0f && !(currentAction is Action_Sleep) && CanPerformAction<Action_Sleep>();
-
-        return criticalHunger || criticalEnergy;
-    }
-
-    private bool CanPerformAction<T>() where T : GoapAction
-    {
-        foreach (GoapAction action in availableActions)
+        // No interrumpir acciones de necesidades básicas.
+        // Si un colono ya está comiendo o durmiendo, que termine.
+        if (currentAction is Action_Eat || currentAction is Action_Sleep)
         {
-            if (action is T)
-            {
-                return action.CheckProceduralPrecondition(gameObject);
-            }
+            return false;
         }
 
-        return false;
+        WorldState state = worldStateProvider.BuildWorldState(gameObject);
+
+        bool criticalHunger = needs.hunger <= needs.hungerThreshold
+            && !(currentAction is Action_Eat)
+            && state.GetState("has_food_available");
+
+        bool criticalEnergy = needs.energy <= needs.energyThreshold
+            && !(currentAction is Action_Sleep)
+            && state.GetState("has_free_bed");
+
+        return criticalHunger || criticalEnergy;
     }
 
     public string GetCurrentActionName()

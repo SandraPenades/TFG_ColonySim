@@ -8,23 +8,32 @@ public class BuilderManager : MonoBehaviour
 {
     public static BuilderManager Instance;
 
+    [Header("Referencias de escena")]
     public Grid mainGrid;
     public Tilemap resourcesTilemap;
+
+    [Header("Capas de validación")]
     public LayerMask blockingPlacementLayer;
     public LayerMask blueprintLayer;
-    private HashSet<Vector3Int> occupiedBlueprintCells = new HashSet<Vector3Int>();
 
+    private HashSet<Vector3Int> occupiedBlueprintCells = new HashSet<Vector3Int>();
+    private Dictionary<Vector3Int, Wall> wallBlueprintsByCell = new Dictionary<Vector3Int, Wall>();
+
+    [Header("Modo de construcción")]
     public GameObject selectedBlueprintPrefab;
     public bool isBuildModeActive = false;
+
     private float currentRotation = 0f;
 
     private GameObject previewObject;
     private SpriteRenderer previewRenderer;
 
+    private bool isInitialShelfPlacementMode = false;
+    private System.Action<Vector3> onInitialShelfPlaced;
+
+    [Header("Vista previa de colocación")]
     public Color validPreviewColor = new Color(1f, 1f, 1f, 0.45f);
     public Color invalidPreviewColor = new Color(1f, 0.3f, 0.3f, 0.45f);
-
-    public BuildInfoPanel buildInfoPanel;
 
     private void Awake()
     {
@@ -56,11 +65,19 @@ public class BuilderManager : MonoBehaviour
 
         if (Input.GetMouseButtonDown(1))
         {
-            TryCancelBlueprint();
+            if (!isInitialShelfPlacementMode)
+            {
+                TryCancelBlueprint();
+            }
         }
 
         if (Input.GetKeyDown(KeyCode.Escape))
         {
+            if (isInitialShelfPlacementMode)
+            {
+                return;
+            }
+
             if (UIManager.Instance != null)
             {
                 UIManager.Instance.CloseBuildMenu();
@@ -69,6 +86,7 @@ public class BuilderManager : MonoBehaviour
             {
                 CancelBuildMode();
             }
+
             return;
         }
     }
@@ -81,12 +99,54 @@ public class BuilderManager : MonoBehaviour
         currentRotation = 0f;
 
         CreatePreview();
+    }
 
-        if (buildInfoPanel != null && selectedBlueprintPrefab != null)
+    public void StartInitialShelfPlacement(GameObject shelfBlueprintPrefab, System.Action<Vector3> onPlacedCallback)
+    {
+        if (shelfBlueprintPrefab == null)
         {
-            Blueprint blueprintData = selectedBlueprintPrefab.GetComponent<Blueprint>();
-            buildInfoPanel.Show(blueprintData);
+            Debug.LogWarning("[BuilderManager] No se ha asignado el blueprint de la estantería inicial.");
+            return;
         }
+
+        isInitialShelfPlacementMode = true;
+        onInitialShelfPlaced = onPlacedCallback;
+
+        SelectBlueprint(shelfBlueprintPrefab);
+
+        Debug.Log("[BuilderManager] Modo colocación inicial de estantería activado.");
+    }
+
+    public bool HasWallBlueprintAt(Vector3Int cell)
+    {
+        if (!wallBlueprintsByCell.TryGetValue(cell, out Wall wall))
+        {
+            return false;
+        }
+
+        if (wall == null)
+        {
+            wallBlueprintsByCell.Remove(cell);
+            return false;
+        }
+
+        return true;
+    }
+
+    public Wall GetWallBlueprintAt(Vector3Int cell)
+    {
+        if (!wallBlueprintsByCell.TryGetValue(cell, out Wall wall))
+        {
+            return null;
+        }
+
+        if (wall == null)
+        {
+            wallBlueprintsByCell.Remove(cell);
+            return null;
+        }
+
+        return wall;
     }
 
     private bool SelectedBlueprintCanRotate()
@@ -108,7 +168,15 @@ public class BuilderManager : MonoBehaviour
 
         previewObject = Instantiate(selectedBlueprintPrefab);
         previewObject.name = "BuildPreview";
-        previewObject.transform.rotation = Quaternion.Euler(0f, 0f, currentRotation);
+
+        if (SelectedBlueprintIsWall())
+        {
+            previewObject.transform.rotation = Quaternion.identity;
+        }
+        else
+        {
+            previewObject.transform.rotation = Quaternion.Euler(0f, 0f, currentRotation);
+        }
 
         Blueprint blueprint = previewObject.GetComponent<Blueprint>();
         if (blueprint != null)
@@ -129,6 +197,15 @@ public class BuilderManager : MonoBehaviour
             previewRenderer.color = validPreviewColor;
             previewRenderer.sortingOrder = 50;
         }
+    }
+
+    private bool SelectedBlueprintIsWall()
+    {
+        if (selectedBlueprintPrefab == null) return false;
+
+        Wall wall = selectedBlueprintPrefab.GetComponentInChildren<Wall>();
+
+        return wall != null;
     }
 
     private void DestroyPreview()
@@ -154,6 +231,8 @@ public class BuilderManager : MonoBehaviour
 
         previewObject.transform.position = placeWorldPos;
 
+        UpdateWallPreviewSprite(cellPos);
+
         bool canPlace = CanPlaceAt(cellPos);
 
         if (previewRenderer != null)
@@ -165,6 +244,11 @@ public class BuilderManager : MonoBehaviour
     private Vector3 GetRotatedPlacementPosition(Vector3Int cellPos)
     {
         Vector3 basePos = mainGrid.GetCellCenterWorld(cellPos);
+
+        if (SelectedBlueprintIsWall())
+        {
+            return basePos;
+        }
 
         Vector2Int originalSize = GetSelectedBlueprintSize();
         Vector2Int rotatedSize = GetSelectedBlueprintSizeWithRotation();
@@ -198,17 +282,42 @@ public class BuilderManager : MonoBehaviour
         return basePos + offset;
     }
 
+    private void UpdateWallPreviewSprite(Vector3Int cellPos)
+    {
+        if (previewObject == null) return;
+        if (WallManager.Instance == null) return;
+
+        Wall wall = previewObject.GetComponentInChildren<Wall>();
+
+        if (wall == null) return;
+
+        SpriteRenderer sr = previewObject.GetComponentInChildren<SpriteRenderer>();
+
+        if (sr == null) return;
+
+        Sprite previewSprite = WallManager.Instance.GetPreviewSprite(
+            cellPos,
+            currentRotation,
+            wall.Material
+        );
+
+        if (previewSprite != null)
+        {
+            sr.sprite = previewSprite;
+        }
+    }
+
     public void CancelBuildMode()
     {
+        if (isInitialShelfPlacementMode)
+        {
+            return;
+        }
+
         selectedBlueprintPrefab = null;
         isBuildModeActive = false;
 
         DestroyPreview();
-
-        if (buildInfoPanel != null)
-        {
-            buildInfoPanel.Hide();
-        }
     }
 
     private void TryPlaceBlueprint()
@@ -221,11 +330,24 @@ public class BuilderManager : MonoBehaviour
 
         if (!CanPlaceAt(cellPos))
         {
-            Debug.Log("[BuilderManager] No se puede colocar aquí.");
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayNotAllowed();
+            }
+
             return;
         }
 
-        Quaternion rotation = Quaternion.Euler(0f, 0f, currentRotation);
+        if (isInitialShelfPlacementMode)
+        {
+            PlaceInitialShelf(cellPos, placeWorldPos);
+            return;
+        }
+
+        Quaternion rotation = SelectedBlueprintIsWall()
+            ? Quaternion.identity
+            : Quaternion.Euler(0f, 0f, currentRotation);
+
         GameObject newBlueprint = Instantiate(selectedBlueprintPrefab, placeWorldPos, rotation);
 
         Blueprint blueprint = newBlueprint.GetComponent<Blueprint>();
@@ -237,9 +359,142 @@ public class BuilderManager : MonoBehaviour
             blueprint.occupiedSize = size;
         }
 
+        ApplyWallSpriteToPlacedBlueprint(newBlueprint, cellPos, currentRotation);
+        RegisterWallBlueprint(newBlueprint, cellPos);
+        RefreshWallBlueprintsAround(cellPos);
+
         foreach (Vector3Int occupiedCell in GetOccupiedCells(cellPos, size))
         {
             occupiedBlueprintCells.Add(occupiedCell);
+        }
+    }
+
+    private void PlaceInitialShelf(Vector3Int cellPos, Vector3 placeWorldPos)
+    {
+        if (selectedBlueprintPrefab == null) return;
+
+        Blueprint blueprintData = selectedBlueprintPrefab.GetComponent<Blueprint>();
+
+        if (blueprintData == null)
+        {
+            Debug.LogWarning("[BuilderManager] El prefab de estantería inicial no tiene componente Blueprint.");
+            return;
+        }
+
+        if (blueprintData.finalPrefab == null)
+        {
+            Debug.LogWarning("[BuilderManager] El blueprint de estantería inicial no tiene finalPrefab asignado.");
+            return;
+        }
+
+        Quaternion rotation = Quaternion.Euler(0f, 0f, currentRotation);
+
+        GameObject shelf = Instantiate(
+            blueprintData.finalPrefab,
+            placeWorldPos,
+            rotation
+        );
+
+        Vector2Int size = GetSelectedBlueprintSizeWithRotation();
+
+        foreach (Vector3Int occupiedCell in GetOccupiedCells(cellPos, size))
+        {
+            occupiedBlueprintCells.Add(occupiedCell);
+        }
+
+        isInitialShelfPlacementMode = false;
+        isBuildModeActive = false;
+        selectedBlueprintPrefab = null;
+
+        DestroyPreview();
+
+        onInitialShelfPlaced?.Invoke(placeWorldPos);
+        onInitialShelfPlaced = null;
+
+        Debug.Log("[BuilderManager] Estantería inicial colocada.");
+    }
+
+    private void ApplyWallSpriteToPlacedBlueprint(GameObject blueprintObject, Vector3Int cellPos, float rotation)
+    {
+        if (blueprintObject == null) return;
+        if (WallManager.Instance == null) return;
+
+        Wall wall = blueprintObject.GetComponentInChildren<Wall>();
+
+        if (wall == null) return;
+
+        wall.Initialize(cellPos, rotation);
+
+        SpriteRenderer sr = blueprintObject.GetComponentInChildren<SpriteRenderer>();
+
+        if (sr == null) return;
+
+        Sprite sprite = WallManager.Instance.GetPreviewSprite(
+            cellPos,
+            rotation,
+            wall.Material
+        );
+
+        if (sprite != null)
+        {
+            sr.sprite = sprite;
+        }
+    }
+
+    private void RegisterWallBlueprint(GameObject blueprintObject, Vector3Int cellPos)
+    {
+        if (blueprintObject == null) return;
+
+        Wall wall = blueprintObject.GetComponentInChildren<Wall>();
+
+        if (wall == null) return;
+
+        wallBlueprintsByCell[cellPos] = wall;
+    }
+
+    private void UnregisterWallBlueprint(Vector3Int cellPos)
+    {
+        if (wallBlueprintsByCell.ContainsKey(cellPos))
+        {
+            wallBlueprintsByCell.Remove(cellPos);
+        }
+    }
+
+    private void RefreshWallBlueprintsAround(Vector3Int cellPos)
+    {
+        if (WallManager.Instance != null)
+        {
+            WallManager.Instance.RefreshWallAndNeighbours(cellPos);
+        }
+
+        RefreshWallBlueprintSpriteAt(cellPos);
+        RefreshWallBlueprintSpriteAt(cellPos + Vector3Int.up);
+        RefreshWallBlueprintSpriteAt(cellPos + Vector3Int.down);
+        RefreshWallBlueprintSpriteAt(cellPos + Vector3Int.left);
+        RefreshWallBlueprintSpriteAt(cellPos + Vector3Int.right);
+    }
+
+    private void RefreshWallBlueprintSpriteAt(Vector3Int cellPos)
+    {
+        if (WallManager.Instance == null) return;
+
+        Wall wall = GetWallBlueprintAt(cellPos);
+
+        if (wall == null) return;
+
+        SpriteRenderer sr = wall.GetComponentInChildren<SpriteRenderer>();
+
+        if (sr == null) return;
+
+        Sprite sprite = WallManager.Instance.GetPreviewSprite(
+            cellPos,
+            wall.ManualRotation,
+            wall.Material
+        );
+
+        if (sprite != null)
+        {
+            sr.sprite = sprite;
         }
     }
 
@@ -276,19 +531,19 @@ public class BuilderManager : MonoBehaviour
 
         if (blueprint.isReserved)
         {
-            Debug.Log("[BuilderManager] No se puede cancelar, está reservado por un colono");
+            // Debug.Log("[BuilderManager] No se puede cancelar, está reservado por un colono");
             return;
         }
 
         if (blueprint.resourcesDelivered)
         {
-            Debug.Log("[BuilderManager] No se puede cancelar, tiene recursos");
+            // Debug.Log("[BuilderManager] No se puede cancelar, tiene recursos");
             return;
         }
 
         if (blueprint.isCompleted)
         {
-            Debug.Log("[BuilderManager] No se puede cancelar, está completo");
+            // Debug.Log("[BuilderManager] No se puede cancelar, está completo");
             return;
         }
 
@@ -298,6 +553,9 @@ public class BuilderManager : MonoBehaviour
         }
 
         UnregisterBlueprintCells(blueprint.cellPosition, blueprint.occupiedSize);
+
+        UnregisterWallBlueprint(blueprint.cellPosition);
+        RefreshWallBlueprintsAround(blueprint.cellPosition);
 
         Destroy(blueprint.gameObject);
     }
@@ -336,6 +594,11 @@ public class BuilderManager : MonoBehaviour
 
     private Vector2Int GetSelectedBlueprintSizeWithRotation()
     {
+        if (SelectedBlueprintIsWall())
+        {
+            return GetSelectedBlueprintSize();
+        }
+
         Vector2Int size = GetSelectedBlueprintSize();
 
         if (!SelectedBlueprintCanRotate())
@@ -404,6 +667,24 @@ public class BuilderManager : MonoBehaviour
 
     private void RotateSelectedBlueprint()
     {
+        if (SelectedBlueprintIsWall())
+        {
+            currentRotation = Mathf.RoundToInt(currentRotation) == 180 ? 0f : 180f;
+
+            if (previewObject != null)
+            {
+                previewObject.transform.rotation = Quaternion.identity;
+
+                Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+                mouseWorldPos.z = 0;
+
+                Vector3Int cellPos = mainGrid.WorldToCell(mouseWorldPos);
+                UpdateWallPreviewSprite(cellPos);
+            }
+
+            return;
+        }
+
         if (!SelectedBlueprintCanRotate()) return;
 
         Blueprint blueprint = selectedBlueprintPrefab.GetComponent<Blueprint>();

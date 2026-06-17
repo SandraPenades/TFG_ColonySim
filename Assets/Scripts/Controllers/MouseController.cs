@@ -5,15 +5,20 @@ using UnityEngine.EventSystems;
 
 public class MouseController : MonoBehaviour
 {
+    [Header("Referencias de zona")]
     public ZoneManager zoneManager;
     public Grid mainGrid;
+
+    [Header("Visualización de selección")]
     public GameObject selectionBoxVisual;
+
     private SpriteRenderer selectionRenderer; // Para cambiar el color
 
     private Vector3 startMousePos;
     private bool isDragging = false;
     private bool isErasing = false;
 
+    [Header("Modo de zona activo")]
     public ZoneManager.ZoneType currentMode = ZoneManager.ZoneType.Logging;
 
     void Awake()
@@ -82,6 +87,11 @@ public class MouseController : MonoBehaviour
 
     private void FinishAreaSelection()
     {
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayClick();
+        }
+
         Vector3 endMousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         endMousePos.z = 0;
 
@@ -106,22 +116,22 @@ public class MouseController : MonoBehaviour
         switch (currentMode)
         {
             case ZoneManager.ZoneType.Logging: 
-                color = new Color(1f, 0.92f, 0.016f, 0.4f); 
+                color = new Color(0.28f, 0.60f, 0.34f, 0.8f); 
                 break;
             case ZoneManager.ZoneType.Mining: 
-                color = new Color(0f, 1f, 1f, 0.4f); 
+                color = new Color(0.50f, 0.55f, 0.70f, 0.8f); 
                 break;
             case ZoneManager.ZoneType.Harvesting: 
-                color = new Color(1f, 0f, 1f, 0.4f); 
+                color = new Color(0.90f, 0.27f, 0.30f, 0.8f); 
                 break;
             default: 
-                color = new Color(0.5f, 0.5f, 0.5f, 0.4f); 
+                color = new Color(0.5f, 0.5f, 0.5f, 0.8f); 
                 break;
         }
 
         if (isErasing)
         {
-            color = new Color(1f, 0.2f, 0.2f, 0.35f);
+            color = new Color(0.5f, 0.5f, 0.5f, 0.8f);
         }
 
         selectionRenderer.color = color;

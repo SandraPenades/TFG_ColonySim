@@ -5,11 +5,15 @@ using UnityEngine;
 public class Action_Eat : GoapAction
 {
     private bool isDone = false;
+    private bool hasStarted = false;
     private GameObject targetFood;
     private string foodToEat = "";
     private AgentMovement movement;
     private AgentNeeds needs;
+
+    [Header("Visualización del recurso")]
     public GameObject genericItemPrefab;
+    
     private GameObject targetFoodItem;
 
     protected override void Awake()
@@ -62,7 +66,19 @@ public class Action_Eat : GoapAction
 
     public override void Perform(GameObject agent)
     {
+        if (hasStarted) return;
+
         movement = agent.GetComponent<AgentMovement>();
+
+        if (movement == null || targetFood == null)
+        {
+            isDone = true;
+            return;
+        }
+
+        hasStarted = true;
+        isDone = false;
+
         movement.MoveTo(targetFood.transform.position);
 
         StartCoroutine(EatRoutine(agent));
@@ -70,7 +86,22 @@ public class Action_Eat : GoapAction
 
     private IEnumerator EatRoutine(GameObject agent)
     {
-        while (!movement.HasReachedDestination()) yield return null;
+        float moveTimer = 0f;
+        float maxMoveTime = 8f;
+
+        while (!movement.HasReachedDestination())
+        {
+            moveTimer += Time.deltaTime;
+
+            if (moveTimer >= maxMoveTime)
+            {
+                isDone = true;
+                yield break;
+            }
+
+            yield return null;
+        }
+
         movement.StopMoving();
 
         StorageBuilding storage = targetFood.GetComponent<StorageBuilding>();
@@ -80,8 +111,13 @@ public class Action_Eat : GoapAction
             targetFoodItem = Instantiate(genericItemPrefab, agent.transform.position, Quaternion.identity);
 
             Sprite foodSprite = storage.database.GetSprite(foodToEat);
-            targetFoodItem.GetComponent<SpriteRenderer>().sprite = foodSprite;
-            targetFoodItem.GetComponent<SpriteRenderer>().sortingOrder = 10; // Para que se vea por delante del colono
+
+            SpriteRenderer sr = targetFoodItem.GetComponent<SpriteRenderer>();
+            if (sr != null)
+            {
+                sr.sprite = foodSprite;
+                sr.sortingOrder = 10;
+            }
 
             ResourceItem rItem = targetFoodItem.GetComponent<ResourceItem>();
             if (rItem != null)
@@ -91,92 +127,72 @@ public class Action_Eat : GoapAction
             }
 
             Collider2D col = targetFoodItem.GetComponent<Collider2D>();
-            if (col != null) col.enabled = false;
+            if (col != null)
+            {
+                col.enabled = false;
+            }
 
             targetFoodItem.transform.SetParent(agent.transform);
             targetFoodItem.transform.localPosition = new Vector3(0, 0.2f, 0);
 
-            yield return new WaitForSeconds(0.2f);
+            ColonistAudio audio = GetComponent<ColonistAudio>();
 
-            GameObject[] tables = new GameObject[0];
-
-            try
+            if (audio != null)
             {
-                tables = GameObject.FindGameObjectsWithTag("Table");
-            }
-            catch
-            {
-                Debug.Log("No se ha encontrado ninguna mesa.");
-            }
-            
-            Vector3 eatPosition;
-
-            if (tables.Length > 0)
-            {
-                float shortestDist = Mathf.Infinity;
-                GameObject bestTable = tables[0];
-
-                foreach (GameObject table in tables)
-                {
-                    float dist = Vector3.Distance(agent.transform.position, table .transform.position);
-                    if (dist < shortestDist)
-                    {
-                        shortestDist = dist;
-                        bestTable = table;
-                    }
-                }
-                eatPosition = bestTable.transform.position;
-            }
-            else
-            {
-                // Si no hay mesas, que coma "en el suelo"
-                eatPosition = agent.transform.position + new Vector3(1.5f, -0.5f, 0);
+                audio.PlayEat();
             }
 
-            movement.MoveTo(eatPosition);
-            while (!movement.HasReachedDestination()) yield return null;
-            movement.StopMoving();
-
-            // Debug.Log($"Ñam ñam.. Comiendo {foodToEat}...");
-            yield return new WaitForSeconds(3.0f); // Esto se ajusta después
+            yield return new WaitForSeconds(3.0f);
 
             if (targetFoodItem != null)
             {
                 Destroy(targetFoodItem);
                 targetFoodItem = null;
             }
+
             needs.hunger = 100f;
             isDone = true;
         }
         else
         {
-            // Si había pero cuando llega ya no hay
+            // Si cuando llega ya no queda comida, termina para que pueda replantear.
             isDone = true;
         }
     }
 
     public override bool IsDone() => isDone;
-    public override void ResetAction() 
-    { 
+    public override void ResetAction()
+    {
         StopAllCoroutines();
 
-        if (targetFoodItem != null && targetFoodItem.transform.parent != null)
+        if (targetFoodItem != null)
         {
-            targetFoodItem.transform.SetParent(null);
+            ResourceItem rItem = targetFoodItem.GetComponent<ResourceItem>();
 
-            Collider2D col = targetFoodItem.GetComponent<Collider2D>();
-            if (col != null) col.enabled = true;
+            StorageBuilding storage = null;
 
-            Vector3 dropPos = targetFoodItem.transform.position;
-            targetFoodItem.transform.position = new Vector3(dropPos.x, dropPos.y, 0);
+            if (targetFood != null)
+            {
+                storage = targetFood.GetComponent<StorageBuilding>();
+            }
 
-            Vector3Int gridPos = new Vector3Int(Mathf.RoundToInt(dropPos.x), Mathf.RoundToInt(dropPos.y), 0);
-            JobManager.Instance.AddJob(Job.JobType.Transportar, gridPos);
+            if (storage == null)
+            {
+                storage = FindObjectOfType<StorageBuilding>();
+            }
+
+            if (storage != null && rItem != null)
+            {
+                storage.AddItem(rItem.itemID, rItem.amount);
+            }
+
+            Destroy(targetFoodItem);
+            targetFoodItem = null;
         }
-        
-        isDone = false; 
-        targetFood = null; 
+
+        isDone = false;
+        hasStarted = false;
+        targetFood = null;
         foodToEat = "";
-        targetFoodItem = null;
     }
 }

@@ -2,23 +2,29 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using UnityEngine.UI;
 
 public class ColonistInfoPanel : MonoBehaviour
 {
-    [Header("Textos del panel")]
     public TextMeshProUGUI colonistNameText;
     public TextMeshProUGUI goalText;
     public TextMeshProUGUI planText;
     public TextMeshProUGUI actionText;
-    public TextMeshProUGUI decisionText;
     public TextMeshProUGUI hungerText;
     public TextMeshProUGUI energyText;
     public TextMeshProUGUI funText;
     public TextMeshProUGUI socialText;
     public TextMeshProUGUI modeText;
-    public TextMeshProUGUI handItemText;
+
+    [SerializeField] private Slider hungerSlider;
+    [SerializeField] private Slider energySlider;
+    [SerializeField] private Slider funSlider;
+    [SerializeField] private Slider socialSlider;
+    [SerializeField] private Slider healthSlider;
 
     private GameObject selectedColonist;
+    private GameObject selectedIcon;
+
     private ColonistRecruitment recruitment;
     private AgentBrain brain;
     private AgentNeeds needs;
@@ -26,6 +32,11 @@ public class ColonistInfoPanel : MonoBehaviour
     private void Start()
     {
         ClearPanel();
+        ConfigureSlider(hungerSlider);
+        ConfigureSlider(energySlider);
+        ConfigureSlider(funSlider);
+        ConfigureSlider(socialSlider);
+        ConfigureSlider(healthSlider);
     }
 
     private void Update()
@@ -35,28 +46,57 @@ public class ColonistInfoPanel : MonoBehaviour
         UpdatePanelInfo();
     }
 
+    private void ConfigureSlider(Slider slider)
+    {
+        if (slider == null) return;
+
+        slider.minValue = 0f;
+        slider.maxValue = 100f;
+        slider.wholeNumbers = false;
+        slider.interactable = false;
+    }
+
     public void SetColonist(GameObject colonist)
     {
+        if (selectedIcon != null)
+        {
+            selectedIcon.SetActive(false);
+            selectedIcon = null;
+        }
+        
         selectedColonist = colonist;
 
         if (selectedColonist != null)
         {
             brain = selectedColonist.GetComponent<AgentBrain>();
             needs = selectedColonist.GetComponent<AgentNeeds>();
+            recruitment = selectedColonist.GetComponent<ColonistRecruitment>();
+
+            Transform iconTransform = selectedColonist.transform.Find("selectedColonist");
+            if (iconTransform != null)
+            {
+                selectedIcon = iconTransform.gameObject;
+                selectedIcon.SetActive(true);
+            }
 
             gameObject.SetActive(true);
             UpdatePanelInfo();
         }
         else
         {
+            selectedIcon.SetActive(false);
             ClearPanel();
         }
-
-        recruitment = selectedColonist.GetComponent<ColonistRecruitment>();
     }
 
     public void ClearPanel()
     {
+        if (selectedIcon != null)
+        {
+            selectedIcon.SetActive(false);
+            selectedIcon = null;
+        }
+
         selectedColonist = null;
         brain = null;
         needs = null;
@@ -71,80 +111,86 @@ public class ColonistInfoPanel : MonoBehaviour
 
         if (colonistNameText != null)
         {
-            colonistNameText.text = $"Colono: {selectedColonist.name}";
+            string cleanName = selectedColonist.name.Replace("Colonist_", "");
+            colonistNameText.text = cleanName;
         }
 
         if (goalText != null)
         {
-            goalText.text = brain != null ? $"Objetivo: \n{brain.GetCurrentGoalName()}" : "Objetivo: \n-";
+            goalText.text = brain != null ? $"{brain.GetCurrentGoalName()}" : "-";
         }
 
         if (actionText != null)
         {
-            actionText.text = brain != null ? $"Acción: \n{brain.GetCurrentActionName()}" : "Acción: \n-";
+            actionText.text = brain != null ? $"{brain.GetCurrentActionName()}" : "-";
         }
 
         if (planText != null)
         {
-            planText.text = brain != null ? $"Plan restante: \n{brain.GetCurrentPlanDescription()}" : "Plan restante: \n-";
-        }
-
-        if (decisionText != null)
-        {
-            decisionText.text = brain != null ? $"Decisión: \n{brain.GetCurrentDecisionReason()}" : "Decisión: \n-";
+            planText.text = brain != null ? $"{brain.GetCurrentPlanDescription()}" : "-";
         }
 
         if (modeText != null)
         {
             if (recruitment != null && recruitment.IsRecruited)
             {
-                modeText.text = "Reclutado";
+                modeText.text = "Estado: Reclutado";
             }
             else
             {
-                modeText.text = "Autónomo";
-            }
-        }
-
-        if (handItemText != null)
-        {
-            ResourceItem carriedItem = selectedColonist.GetComponentInChildren<ResourceItem>();
-
-            if (carriedItem != null)
-            {
-                handItemText.text = $"{carriedItem.itemID} x{carriedItem.amount}";
-            }
-            else
-            {
-                handItemText.text = "Nada";
+                modeText.text = "Estado: Autónomo";
             }
         }
 
         if (needs != null)
         {
-            if (hungerText != null)
+            if (hungerText != null | hungerSlider != null)
             {
-                hungerText.text = $"{needs.hunger:0}";
+                hungerText.text = $"{needs.hunger:0}/100";
+                hungerSlider.value = needs.hunger;
             }
-            if (energyText != null)
+            if (energyText != null | energySlider != null)
             {
-                energyText.text = $"{needs.energy:0}";
+                energyText.text = $"{needs.energy:0}/100";
+                energySlider.value = needs.energy;
             }
-            if (funText != null)
+            if (funText != null | funSlider != null)
             {
-                funText.text = $"{needs.fun:0}";
+                funText.text = $"{needs.fun:0}/100";
+                funSlider.value = needs.fun;
             }
-            if (socialText != null)
+            if (socialText != null | socialSlider != null)
             {
-                socialText.text = $"{needs.social:0}";
+                socialText.text = $"{needs.social:0}/100";
+                socialSlider.value = needs.social;
+            }
+            if (healthSlider != null)
+            {
+                healthSlider.value = needs.health;
             }
         }
         else
         {
-            if (hungerText != null) hungerText.text = "-";
-            if (energyText != null) energyText.text = "-";
-            if (funText != null) funText.text = "-";
-            if (socialText != null) socialText.text = "-";
+            if (hungerText != null) 
+            {
+                hungerText.text = "-/100";
+                hungerSlider.value = 0;
+            }
+            if (energyText != null) 
+            {
+                energyText.text = "-/100";
+                energySlider.value = 0;
+            }
+            if (funText != null) 
+            {
+                funText.text = "-/100";
+                funSlider.value = 0;
+            }
+            if (socialText != null) 
+            {
+                socialText.text = "-/100";
+                socialSlider.value = 0;
+            }
         }
     }
 }

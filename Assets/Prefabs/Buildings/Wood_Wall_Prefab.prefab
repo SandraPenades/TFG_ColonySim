@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 4237729043354637950}
   - component: {fileID: -6070975687120190590}
   - component: {fileID: 5551816771939317045}
+  - component: {fileID: 289001194483649538}
   - component: {fileID: 1052861762911484227}
   m_Layer: 8
   m_Name: Wood_Wall_Prefab
@@ -76,7 +77,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 2
-  m_Sprite: {fileID: 21300000, guid: 0d7a221c457cc494b99d29f4fbe8253c, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 49651836a0c8f5743b5caf814516d838, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -123,7 +124,7 @@ BoxCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 1, y: 1}
+    oldSize: {x: 1, y: 1.0827587}
     newSize: {x: 1, y: 1}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
@@ -148,6 +149,19 @@ MonoBehaviour:
   m_Area: 1
   m_IgnoreFromBuild: 0
   m_AffectedAgents: ffffffff
+--- !u!114 &289001194483649538
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6003673874499218854}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cd7ad7f42b874aa46a3c3ad3295072e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  spriteRenderer: {fileID: 4237729043354637950}
 --- !u!114 &1052861762911484227
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -161,6 +175,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   buildingName: Muro de madera
-  originalResources: []
+  originalResources:
+  - itemID: Madera
+    amount: 5
   isMarkedForDeconstruction: 0
   isReservedForDeconstruction: 0

@@ -7,20 +7,19 @@ public class ZoneManager : MonoBehaviour
 {
     public static ZoneManager Instance;
 
-    [Header("Tilemaps de Zonas")]
+    [Header("Tilemaps de zonas")]
     public Tilemap loggingZoneTilemap;
     public Tilemap miningZoneTilemap;
     public Tilemap harvestingZoneTilemap;
 
-    [Header("Tilemap de Recursos Naturales")]
-    public Tilemap resourcesTilemap; // Para comprobar si hay árboles
+    [Header("Tilemap de recursos")]
+    public Tilemap resourcesTilemap;
 
-    [Header("Tiles visuales de zonas")]
+    [Header("Tiles de visualización de zonas")]
     public TileBase loggingZoneTile;
     public TileBase miningZoneTile;
     public TileBase harvestingZoneTile;
 
-    // Añadir nueva variable de zona si hay un nuevo trabajo con zonas
 
     public enum ZoneType { None, Logging, Mining, Harvesting }
 
@@ -55,7 +54,7 @@ public class ZoneManager : MonoBehaviour
             TryCreateJobAtPosition(pos, type);
         }
 
-        Debug.Log($"Zona {type} aplicada.");
+        // Debug.Log($"Zona {type} aplicada.");
     }
 
     public void EraseZone(BoundsInt area, ZoneType type)
@@ -73,7 +72,7 @@ public class ZoneManager : MonoBehaviour
             RemoveJobsAtPosition(pos, type);
         }
 
-        Debug.Log($"Zona {type} borrada.");
+        // Debug.Log($"Zona {type} borrada.");
     }
 
     private void RegisterZonePosition(Vector3Int pos, ZoneType type)

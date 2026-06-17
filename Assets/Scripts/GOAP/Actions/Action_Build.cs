@@ -11,8 +11,10 @@ public class Action_Build : GoapAction
     private StorageBuilding targetStorage;
     private List<GameObject> carriedVisuals = new List<GameObject>();
 
+    [Header("Visualización de materiales")]
     public GameObject genericItemPrefab;
     public ItemDatabase database;
+    
     private NavMeshSurface navSurface;
 
     private bool isDone = false;
@@ -79,14 +81,12 @@ public class Action_Build : GoapAction
                 yield break;
             }
 
-            movement.MoveTo(targetStorage.transform.position);
+            yield return StartCoroutine(MoveToTarget(targetStorage.transform.position));
 
-            while (Vector3.Distance(transform.position, targetStorage.transform.position) > 1.5f)
+            if (isDone)
             {
-                yield return null;
+                yield break;
             }
-
-            movement.StopMoving();
 
             if (!ConsumeRequiredResourcesFromStorage(currentBlueprint, targetStorage))
             {
@@ -95,25 +95,19 @@ public class Action_Build : GoapAction
                 yield break;
             }
 
-            carryingResources = true;
-
             CreateCarriedResourceVisuals(currentBlueprint);
             carryingResources = true;
 
             yield return new WaitForSeconds(0.2f);
 
-            movement.MoveTo(currentBlueprint.transform.position);
+            yield return StartCoroutine(MoveToTarget(currentBlueprint.transform.position));
 
-            while (!movement.HasReachedDestination())
+            if (isDone)
             {
-                yield return null;
+                yield break;
             }
 
-            movement.StopMoving();
-
             ClearCarriedResourceVisuals();
-            carryingResources = false;
-
             carryingResources = false;
             currentBlueprint.resourcesDelivered = true;
 
@@ -124,20 +118,59 @@ public class Action_Build : GoapAction
             }
         }
 
-        movement.MoveTo(currentBlueprint.transform.position);
+        yield return StartCoroutine(MoveToTarget(currentBlueprint.transform.position));
 
-        while (!movement.HasReachedDestination())
+        if (isDone)
         {
-            yield return null;
+            yield break;
         }
 
-        movement.StopMoving();
+        ColonistAudio audio = GetComponent<ColonistAudio>();
+
+        if (audio != null)
+        {
+            audio.PlayBuildLoop();
+        }
 
         yield return new WaitForSeconds(3.0f);
 
+        if (audio != null)
+        {
+            audio.StopLoop();
+        }
+
         if (currentBlueprint.finalPrefab != null)
         {
-            GameObject finalBuilding = Instantiate(currentBlueprint.finalPrefab, currentBlueprint.transform.position, currentBlueprint.transform.rotation);
+            GameObject finalBuilding = Instantiate(
+                currentBlueprint.finalPrefab,
+                currentBlueprint.transform.position,
+                currentBlueprint.transform.rotation
+            );
+
+            Wall blueprintWall = currentBlueprint.GetComponentInChildren<Wall>();
+            Wall finalWall = finalBuilding.GetComponent<Wall>();
+
+            if (finalWall == null)
+            {
+                finalWall = finalBuilding.GetComponentInChildren<Wall>();
+            }
+
+            if (finalWall != null)
+            {
+                float manualRotation = 0f;
+
+                if (blueprintWall != null)
+                {
+                    manualRotation = blueprintWall.ManualRotation;
+                }
+
+                finalWall.Initialize(currentBlueprint.cellPosition, manualRotation);
+
+                if (WallManager.Instance != null)
+                {
+                    WallManager.Instance.RegisterWall(finalWall);
+                }
+            }
 
             ConstructedBuilding constructedBuilding = finalBuilding.GetComponent<ConstructedBuilding>();
 
@@ -177,6 +210,59 @@ public class Action_Build : GoapAction
         isDone = true;
     }
 
+    private IEnumerator MoveToTarget(Vector3 destination, float maxTime = 8f)
+    {
+        if (movement == null)
+        {
+            FailBuild();
+            yield break;
+        }
+
+        movement.MoveTo(destination);
+
+        float timer = 0f;
+
+        while (!movement.HasReachedDestination())
+        {
+            timer += Time.deltaTime;
+
+            if (timer >= maxTime)
+            {
+                FailBuild();
+                yield break;
+            }
+
+            yield return null;
+        }
+
+        movement.StopMoving();
+    }
+
+    private void FailBuild()
+    {
+        if (currentBlueprint != null && !currentBlueprint.isCompleted)
+        {
+            currentBlueprint.isReserved = false;
+        }
+
+        if (carryingResources && targetStorage != null && currentBlueprint != null)
+        {
+            foreach (RequiredResource required in currentBlueprint.requiredResources)
+            {
+                targetStorage.AddItem(required.itemID, required.amount);
+            }
+        }
+
+        ClearCarriedResourceVisuals();
+
+        currentBlueprint = null;
+        targetStorage = null;
+        movement = null;
+        carryingResources = false;
+        hasStarted = false;
+        isDone = true;
+    }
+
     private StorageBuilding FindStorageWithRequiredResources(Blueprint blueprint)
     {
         GameObject[] storages = GameObject.FindGameObjectsWithTag("Storage");
@@ -209,17 +295,7 @@ public class Action_Build : GoapAction
 
     private bool HasRequiredResources(Blueprint blueprint)
     {
-        foreach (RequiredResource required in blueprint.requiredResources)
-        {
-            int totalAmount = GetTotalStoredAmount(required.itemID);
-
-            if (totalAmount < required.amount)
-            {
-                return false;
-            }
-        }
-
-        return true;
+        return FindStorageWithRequiredResources(blueprint) != null;
     }
 
     private int GetTotalStoredAmount(string itemID)

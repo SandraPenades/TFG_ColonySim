@@ -36,7 +36,7 @@ public class Action_Mining : GoapAction
     public override bool CheckProceduralPrecondition(GameObject agent)
     {
         // Que el JobManager indique la piedra más cercana
-        currentJob = JobManager.Instance.GetNextJob(Job.JobType.Minar, agent.transform.position);
+        currentJob = JobManager.Instance.ReserveNextJob(Job.JobType.Minar, agent.transform.position);
 
         // Si da algo, es true y si no, es false
         return currentJob != null;
@@ -72,9 +72,19 @@ public class Action_Mining : GoapAction
             yield return null;
         }
 
-        Debug.Log("He llegado a la piedra. Empezando a minar...");
+        ColonistAudio audio = GetComponent<ColonistAudio>();
+
+        if (audio != null)
+        {
+            audio.PlayMineLoop();
+        }
 
         yield return new WaitForSeconds(3.0f);
+
+        if (audio != null)
+        {
+            audio.StopLoop();
+        }
 
         // Borrar la piedra
         if (resourcesMap != null)
@@ -115,7 +125,7 @@ public class Action_Mining : GoapAction
         // Tachar el trabajo de la lista
         JobManager.Instance.pendingJobs.Remove(currentJob);
 
-        Debug.Log("Piedra minada");
+        // Debug.Log("Piedra minada");
 
         // Indicar al GOAP que se ha cumplido
         isDone = true;

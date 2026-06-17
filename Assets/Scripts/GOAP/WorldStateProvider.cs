@@ -15,6 +15,9 @@ public class WorldStateProvider : MonoBehaviour
         // Estados internos del agente
         state.SetState("is_hungry", needs != null && needs.IsHungry());
         state.SetState("is_sleepy", needs != null && needs.IsSleepy());
+        state.SetState("is_bored", needs != null && needs.IsBored());
+        state.SetState("is_lonely", needs != null && needs.IsLonely());
+        state.SetState("is_dying", needs != null && needs.IsDying());
 
         // Estados del entorno
         state.SetState("has_food_available", CheckFoodAvailable());
@@ -33,6 +36,10 @@ public class WorldStateProvider : MonoBehaviour
         state.SetState("has_loose_food", CheckLooseFoodAvailable());
         state.SetState("has_storage_available", CheckStorageAvailable());
         state.SetState("has_required_build_resources", CheckRequiredBuildResourcesAvailable());
+
+        // Recursos necesarios para construir
+        state.SetState("missing_wood_for_build", CheckMissingResourceForBuild("Madera"));
+        state.SetState("missing_stone_for_build", CheckMissingResourceForBuild("Piedra"));
 
         return state;
     }
@@ -178,5 +185,27 @@ public class WorldStateProvider : MonoBehaviour
         }
 
         return totalAmount >= requiredAmount;
+    }
+
+    private bool CheckMissingResourceForBuild(string itemID)
+    {
+        if (ConstructionManager.Instance == null) return false;
+
+        Blueprint blueprint = ConstructionManager.Instance.GetFirstPendingBlueprint();
+
+        if (blueprint == null) return false;
+        if (blueprint.resourcesDelivered) return false;
+
+        foreach (RequiredResource required in blueprint.requiredResources)
+        {
+            if (required.itemID != itemID) continue;
+
+            if (!CheckStoredItemAmount(required.itemID, required.amount))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

@@ -8,12 +8,14 @@ public class ItemDatabase : ScriptableObject
     [System.Serializable]
     public class ItemData
     {
+        [Header("Identificación")]
         public string itemID;
         public Sprite sprite;
         public bool esComestible;
         // Se pueden añadir otras características como peso, valor, etc.
     }
 
+    [Header("Catálogo de recursos")]
     public List<ItemData> catalog = new List<ItemData>();
 
     public Sprite GetSprite(string id)

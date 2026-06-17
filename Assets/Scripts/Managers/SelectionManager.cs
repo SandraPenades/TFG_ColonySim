@@ -7,9 +7,14 @@ using UnityEngine.EventSystems;
 
 public class SelectionManager : MonoBehaviour
 {
-    public GameObject actionMenuPanel;
-    public Button actionButton;
+    public GameObject deconstructionMenuPanel;
+
+    public Button recruitmentButton;
     public TextMeshProUGUI actionText;
+
+    public Button deconstructionButton;
+    public TextMeshProUGUI deconstructionText;
+
     public ColonistInfoPanel colonistInfoPanel;
     public WorkPriorityPanel workPriorityPanel;
 
@@ -22,16 +27,43 @@ public class SelectionManager : MonoBehaviour
 
     void Start()
     {
-        actionMenuPanel.SetActive(false);
-        actionButton.onClick.AddListener(OnActionButtonClicked);
+        if (deconstructionMenuPanel != null)
+        {
+            deconstructionMenuPanel.SetActive(false);
+        }
+
+        if (recruitmentButton != null)
+        {
+            recruitmentButton.onClick.AddListener(OnActionButtonClicked);
+        }
+
+        if (deconstructionButton != null)
+        {
+            deconstructionButton.onClick.AddListener(OnDeconstructionButtonClicked);
+        }
     }
 
     void Update()
     {
         if (EventSystem.current.IsPointerOverGameObject()) return;
 
-        if (Input.GetMouseButtonDown(0)) HandleLeftClick();
-        if (Input.GetMouseButtonDown(1)) HandleRightClick();
+        if (Input.GetMouseButtonDown(0)) 
+        {
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayClick();
+            }
+            HandleLeftClick();
+        }
+
+        if (Input.GetMouseButtonDown(1))
+        {
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayClick();
+            }
+            HandleRightClick();
+        }
     }
 
     void HandleLeftClick()
@@ -82,7 +114,7 @@ public class SelectionManager : MonoBehaviour
             targetPos.z = 0;
 
             selectedColonistMovement.MoveTo(targetPos);
-            Debug.Log("[SelectionManager] Colono moviéndose en modo recluta a: " + targetPos);
+            // Debug.Log("[SelectionManager] Colono moviéndose en modo recluta a: " + targetPos);
         }
     }
 
@@ -101,8 +133,11 @@ public class SelectionManager : MonoBehaviour
         selectedColonistRecruitment = colono.GetComponent<ColonistRecruitment>();
 
         isColonistSelected = true;
-        actionMenuPanel.SetActive(true);
-
+        
+        if (deconstructionMenuPanel != null)
+        {
+            deconstructionMenuPanel.SetActive(false);
+        }
         if (colonistInfoPanel != null)
         {
             colonistInfoPanel.SetColonist(colono);
@@ -112,7 +147,7 @@ public class SelectionManager : MonoBehaviour
             workPriorityPanel.SetColonist(colono);
         }
 
-        UpdateActionButtonText();
+        UpdateRecruitmentButtonText();
     }
 
     void SelectBuilding(ConstructedBuilding building)
@@ -130,9 +165,23 @@ public class SelectionManager : MonoBehaviour
         selectedBuilding = building;
 
         isColonistSelected = false;
-        actionMenuPanel.SetActive(true);
+        
+        if (colonistInfoPanel != null)
+        {
+            colonistInfoPanel.ClearPanel();
+        }
 
-        UpdateActionButtonText();
+        if (workPriorityPanel != null)
+        {
+            workPriorityPanel.ClearPanel();
+        }
+
+        if (deconstructionMenuPanel != null)
+        {
+            deconstructionMenuPanel.SetActive(true);
+        }
+
+        UpdateDeconstructionButtonText();
     }
 
     public void DeselectAll()
@@ -143,11 +192,10 @@ public class SelectionManager : MonoBehaviour
         selectedBuilding = null;
         
         isColonistSelected = false;
-        actionMenuPanel.SetActive(false);
 
-        if (actionMenuPanel != null)
+        if (deconstructionMenuPanel != null)
         {
-            actionMenuPanel.SetActive(false);
+            deconstructionMenuPanel.SetActive(false);
         }
 
         if (colonistInfoPanel != null)
@@ -166,24 +214,34 @@ public class SelectionManager : MonoBehaviour
         if (selectedColonistRecruitment != null)
         {
             selectedColonistRecruitment.ToggleRecruitment();
-            UpdateActionButtonText();
-            return;
-        } 
+            UpdateRecruitmentButtonText();
+        }
+    }
+
+    void OnDeconstructionButtonClicked()
+    {
         if (selectedBuilding != null)
         {
             ToggleBuildDeconstruction();
-            UpdateActionButtonText();
-            return;
-        } 
+            UpdateDeconstructionButtonText();
+        }
     }
 
-    void UpdateActionButtonText()
+    void UpdateRecruitmentButtonText()
     {
         if (actionText == null) return;
 
         if (selectedColonistRecruitment != null)
         {
-            actionText.text = selectedColonistRecruitment.IsRecruited ? "Licenciar" : "Reclutar";
+            if (!selectedColonistRecruitment.IsColonyMember)
+            {
+                actionText.text = "Unir";
+            }
+            else
+            {
+                actionText.text = selectedColonistRecruitment.IsRecruited ? "Licenciar" : "Reclutar";
+            }
+
             return;
         }
 
@@ -194,6 +252,19 @@ public class SelectionManager : MonoBehaviour
         }
 
         actionText.text = "";
+    }
+
+    void UpdateDeconstructionButtonText()
+    {
+        if (deconstructionText == null) return;
+
+        if (selectedBuilding != null)
+        {
+            deconstructionText.text = selectedBuilding.isMarkedForDeconstruction ? "Cancelar" : "Deconstruir";
+            return;
+        }
+
+        deconstructionText.text = "";
     }
 
     private void ToggleBuildDeconstruction()

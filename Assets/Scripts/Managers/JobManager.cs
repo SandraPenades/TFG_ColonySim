@@ -36,7 +36,7 @@ public class JobManager : MonoBehaviour
         //Debug.Log($"[JobManager] Nuevo trabajo: {type} en {position}. Total en cola: {pendingJobs.Count}");
     }
 
-    public Job GetNextJob(Job.JobType type, Vector3 agentPosition, string requiredItemID = "")
+    public Job ReserveNextJob(Job.JobType type, Vector3 agentPosition, string requiredItemID = "")
     {
         Job closestJob = null;
         float closestDistance = Mathf.Infinity;
@@ -46,12 +46,7 @@ public class JobManager : MonoBehaviour
             if (job.state != Job.JobState.Pendiente) continue;
             if (job.type != type) continue;
 
-            // Si se pide un item concreto, ignora trabajos de otro item.
-            // Si requiredItemID está vacío, acepta cualquier item.
-            if (!string.IsNullOrEmpty(requiredItemID) && job.itemID != requiredItemID)
-            {
-                continue;
-            }
+            if (!string.IsNullOrEmpty(requiredItemID) && job.itemID != requiredItemID) continue;
 
             float distance = Vector3.Distance(agentPosition, job.position);
 
@@ -60,6 +55,11 @@ public class JobManager : MonoBehaviour
                 closestDistance = distance;
                 closestJob = job;
             }
+        }
+
+        if (closestJob != null)
+        {
+            closestJob.state = Job.JobState.EnProgreso;
         }
 
         return closestJob;

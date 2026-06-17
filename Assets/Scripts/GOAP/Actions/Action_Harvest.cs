@@ -36,7 +36,7 @@ public class Action_Harvest : GoapAction
     public override bool CheckProceduralPrecondition(GameObject agent)
     {
         // Que el JobManager indique el arbusto lleno más cercano
-        currentJob = JobManager.Instance.GetNextJob(Job.JobType.Recolectar, agent.transform.position);
+        currentJob = JobManager.Instance.ReserveNextJob(Job.JobType.Recolectar, agent.transform.position);
 
         // Si da algo, es true y si no, es false
         return currentJob != null;
@@ -70,7 +70,7 @@ public class Action_Harvest : GoapAction
             yield return null;
         }
 
-        Debug.Log("He llegado al arbusto. Empezando a recolectar...");
+        // Debug.Log("He llegado al arbusto. Empezando a recolectar...");
 
         yield return new WaitForSeconds(1.5f);
 
@@ -106,7 +106,7 @@ public class Action_Harvest : GoapAction
 
         // Tachar el trabajo de la lista
         JobManager.Instance.pendingJobs.Remove(currentJob);
-        Debug.Log("Bayas recolectadas");
+        // Debug.Log("Bayas recolectadas");
         isDone = true;
     }
 

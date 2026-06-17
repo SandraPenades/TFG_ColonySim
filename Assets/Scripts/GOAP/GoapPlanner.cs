@@ -33,7 +33,7 @@ public class GoapPlanner
 
         if (!success)
         {
-            Debug.Log($"[GoapPlanner] No se ha encontrado plan para el objetivo: {goal.goalName}");
+            // Debug.Log($"[GoapPlanner] No se ha encontrado plan para el objetivo: {goal.goalName}");
             return null;
         }
 
@@ -67,7 +67,7 @@ public class GoapPlanner
             queue.Enqueue(action);
         }
 
-        Debug.Log($"[GoapPlanner] Plan encontrado para '{goal.goalName}': " + string.Join(" -> ", result.Select(a => a.actionName)));
+        // Debug.Log($"[GoapPlanner] Plan encontrado para '{goal.goalName}': " + string.Join(" -> ", result.Select(a => a.actionName)));
 
         return queue;
     }

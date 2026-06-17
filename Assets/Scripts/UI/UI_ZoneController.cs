@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class UI_ZoneSelector : MonoBehaviour
 {
+    [Header("Control de zonas")]
     public MouseController mouseController; 
 
     // Funciones para el OnClick() de cada botón

@@ -37,7 +37,7 @@ public class Action_ChopTree : GoapAction
     public override bool CheckProceduralPrecondition(GameObject agent)
     {
         // Que el JobManager indique el árbol más cercano
-        currentJob = JobManager.Instance.GetNextJob(Job.JobType.Talar, agent.transform.position);
+        currentJob = JobManager.Instance.ReserveNextJob(Job.JobType.Talar, agent.transform.position);
 
         // Si da algo, es true y si no, es false
         return currentJob != null;
@@ -73,9 +73,19 @@ public class Action_ChopTree : GoapAction
             yield return null;
         }
 
-        Debug.Log("He llegado al árbol. Empezando a talar...");
+        ColonistAudio audio = GetComponent<ColonistAudio>();
+
+        if (audio != null)
+        {
+            audio.PlayChopLoop();
+        }
 
         yield return new WaitForSeconds(3.0f);
+
+        if (audio != null)
+        {
+            audio.StopLoop();
+        }
 
         // Borrar el árbol
         if (resourcesMap != null)
@@ -110,13 +120,13 @@ public class Action_ChopTree : GoapAction
         }
         else
         {
-            Debug.LogWarning("No asignado el prefab de madera en el Inspector");
+            // Debug.LogWarning("No asignado el prefab de madera en el Inspector");
         }
 
         // Tachar el trabajo de la lista
         JobManager.Instance.pendingJobs.Remove(currentJob);
 
-        Debug.Log("Árbol talado");
+        // Debug.Log("Árbol talado");
 
         // Indicar al GOAP que se ha cumplido
         isDone = true;

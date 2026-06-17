@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4478908755517787883}
   - component: {fileID: 8895197370443369658}
+  - component: {fileID: 6105310040036877878}
   - component: {fileID: 5489355219832108293}
   - component: {fileID: 2133478607717098508}
   m_Layer: 7
@@ -74,9 +75,9 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: 24dc4756567748c40abbbdabfd22a83c, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.83137256}
+  m_SortingOrder: 5
+  m_Sprite: {fileID: 21300000, guid: fe0d6577f512abb4c9e7f380fdf10960, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 0.39215687}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -86,6 +87,19 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &6105310040036877878
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 207835160064528589}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cd7ad7f42b874aa46a3c3ad3295072e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  spriteRenderer: {fileID: 8895197370443369658}
 --- !u!114 &5489355219832108293
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -107,7 +121,10 @@ MonoBehaviour:
   resourcesDelivered: 0
   isCompleted: 0
   sizeInCells: {x: 1, y: 1}
+  canRotate: 1
+  rotationStep: 90
   cellPosition: {x: 0, y: 0, z: 0}
+  occupiedSize: {x: 0, y: 0}
 --- !u!61 &2133478607717098508
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -144,7 +161,7 @@ BoxCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 1, y: 1}
+    oldSize: {x: 1, y: 1.0724138}
     newSize: {x: 1, y: 1}
     adaptiveTilingThreshold: 0.5
     drawMode: 0

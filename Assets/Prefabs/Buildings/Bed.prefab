@@ -76,7 +76,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 2
-  m_Sprite: {fileID: 21300000, guid: 53aed4dc71c91dc4a8747b49131bfdae, type: 3}
+  m_Sprite: {fileID: 21300000, guid: fe779746129d3ee41ad6480bee746371, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -144,7 +144,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d730a5410301e2040b5f24f2e2511afb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isReserved: 0
   isOccupied: 0
+  spriteRenderer: {fileID: 7340166881422130849}
+  emptyBedSprite: {fileID: 21300000, guid: fe779746129d3ee41ad6480bee746371, type: 3}
+  occupiedBedSprite: {fileID: 21300000, guid: 2e0b49a64c2500e4b8afa75458609c3d, type: 3}
 --- !u!114 &957017844805693382
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -158,6 +162,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   buildingName: Cama
-  originalResources: []
+  originalResources:
+  - itemID: Madera
+    amount: 15
   isMarkedForDeconstruction: 0
   isReservedForDeconstruction: 0

@@ -8,6 +8,9 @@ using UnityEngine;
 public class ColonistRecruitment : MonoBehaviour
 {
     public bool IsRecruited { get; private set; } = false;
+    public bool IsColonyMember { get; private set; } = true;
+
+    public GameObject recruitedIcon;
 
     private AgentBrain brain;
     private AgentMovement movement;
@@ -24,6 +27,91 @@ public class ColonistRecruitment : MonoBehaviour
         movement = GetComponent<AgentMovement>();
     }
 
+    private void Start()
+    {
+        ApplyState();
+    }
+
+    public void SetAsVisitor()
+    {
+        IsColonyMember = false;
+        IsRecruited = false;
+
+        if (reactivateBrainCoroutine != null)
+        {
+            StopCoroutine(reactivateBrainCoroutine);
+            reactivateBrainCoroutine = null;
+        }
+
+        if (brain != null)
+        {
+            brain.AbortCurrentAction();
+            brain.enabled = false;
+        }
+
+        if (movement != null)
+        {
+            movement.StopMoving();
+        }
+
+        Door.RefreshAllDoorsFor(gameObject);
+    }
+
+    public void SetAsColonist()
+    {
+        if (!CanBeRecruited())
+        {
+            return;
+        }
+        
+        IsColonyMember = true;
+        IsRecruited = false;
+
+        if (UIManager.Instance != null)
+        {
+            string colonistName = gameObject.name.Replace("Colonist_", "");
+
+            UIManager.Instance.ShowColonistJoinedMessage(colonistName);
+        }
+
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayVisitorJoin();
+        }
+
+        if (reactivateBrainCoroutine != null)
+        {
+            StopCoroutine(reactivateBrainCoroutine);
+            reactivateBrainCoroutine = null;
+        }
+
+        if (brain != null)
+        {
+            brain.enabled = true;
+        }
+
+        Door.RefreshAllDoorsFor(gameObject);
+    }
+
+    private void ApplyState()
+    {
+        if (brain == null) return;
+
+        if (!IsColonyMember)
+        {
+            brain.enabled = false;
+
+            if (movement != null)
+            {
+                movement.StopMoving();
+            }
+
+            return;
+        }
+
+        brain.enabled = !IsRecruited;
+    }
+
     public void ToggleRecruitment()
     {
         if (Time.time - lastToggleTime < toggleCooldown)
@@ -32,6 +120,17 @@ public class ColonistRecruitment : MonoBehaviour
         }
 
         lastToggleTime = Time.time;
+
+        if (!CanBeRecruited())
+        {
+            return;
+        }
+
+        if (!IsColonyMember)
+        {
+            SetAsColonist();
+            return;
+        }
 
         if (IsRecruited)
         {
@@ -43,9 +142,33 @@ public class ColonistRecruitment : MonoBehaviour
         }
     }
 
+    public bool CanBeRecruited()
+    {
+        ThiefVisitor thief = GetComponent<ThiefVisitor>();
+
+        if (thief != null && thief.HasStolen)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
     public void Recruit()
     {
+        if (!CanBeRecruited())
+        {
+            return;
+        }
+
+        if (!IsColonyMember)
+        {
+            SetAsColonist();
+            return;
+        }
+        
         IsRecruited = true;
+        recruitedIcon.SetActive(true);
 
         if (reactivateBrainCoroutine != null)
         {
@@ -69,7 +192,10 @@ public class ColonistRecruitment : MonoBehaviour
 
     public void Unrecruit()
     {
+        if (!IsColonyMember) return;
+
         IsRecruited = false;
+        recruitedIcon.SetActive(false);
 
         if (movement != null)
         {
@@ -90,7 +216,7 @@ public class ColonistRecruitment : MonoBehaviour
     {
         yield return new WaitForSeconds(brainReactivationDelay);
 
-        if (!IsRecruited && brain != null)
+        if (IsColonyMember && !IsRecruited && brain != null)
         {
             brain.enabled = true;
         }

@@ -8,6 +8,7 @@ public class Action_Wander : GoapAction
     private AgentMovement movement;
     private AgentNeeds needs;
 
+    [Header("Configuración de paseo")]
     public float wanderRadius = 4f;
     public float maxWaitTime = 2f;
     public float funRegenRate = 2f;
@@ -56,8 +57,20 @@ public class Action_Wander : GoapAction
         }
 
         // Caminar hasta el punto aleatorio
+        float moveTimer = 0f;
+        float maxMoveTime = 6f;
+
         while (!movement.HasReachedDestination())
         {
+            moveTimer += Time.deltaTime;
+
+            if (moveTimer >= maxMoveTime)
+            {
+                movement.StopMoving();
+                isDone = true;
+                yield break;
+            }
+
             AumentarDiversionIncremental();
             yield return null;
         }
