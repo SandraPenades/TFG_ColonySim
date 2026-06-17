@@ -1,0 +1,26 @@
+[33m42fd2a5[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m Juego terminado
+[33m6732201[m Gestión del tiempo: pausa, x1, x2 y x3 y Menú de Pausa básico sin sistema de guardado de la partida
+[33m30712f8[m Deconstrucción de edificios y rotación correcta
+[33md06fffe[m Añadir panel de prioridades laborales por colono
+[33m4a48616[m Añadir rotación al modo construcción
+[33m050d529[m Mejorar la herramienta de construcción y cancelación de blueprints
+[33m2bf4777[m Añadir preview de construcción
+[33m74779f6[m UI de contrucción con prefabs como obtáculos en NavMesh y cambio de capa de Obstáculos a RecursosNaturales
+[33md16cb0c[m Implementar acción de contruir con blueprint de muro de madera
+[33m3a5ce10[m Mejorar sistema de zonas de trabajo
+[33maa18ffa[m Error de editor posiblemente arreglado con cooldown de reclutamiento
+[33m11e0e1d[m Validar GOAP y ajustar navegación entre colonos
+[33m75ce50c[m Implementar planes GOAP encadenados para recursos
+[33mdc819d8[m Integrar GOAP planner en AgentBrain
+[33m865681d[m Añadir clases base de GOAP planner y goal
+[33m4ec76ee[m Preparar base para GOAP real
+[33m5d6b02d[m Backup estado actual antes de refactor GOAP
+[33m1950c85[m Sistema de Zonas funcional. Apertura y cierre de menús con UIManager. MouseController actualizado para que el cuadrado vaya por cuadrícula y no por libre y con colores diferentes dependiendo del tipo de área. Nuevo UI_ZoneSelector para vincular los botones de la UI con los estados del ratón. Nuevo sistema de Reclutamiento en SelectionManager para que el colono deje de pensar. Se ha mejorado AgentBrain y las acciones de GOAP con corrutinas. Nueva zona de recolección de bayas con ciclo de crecimiento pero no va del todo bien porque no cambia el sprite.
+[33m429951c[m Accion de talar GOAP
+[33m322291c[m Implementacion Arquitectura base GOAP y JobManager
+[33mc665cf1[m Nueva escena con sprites provisionales y todos los scripts creados
+[33m43417ee[m Mecánica de talar funcional y actualización dinámica del NavMesh
+[33m12930c9[m NavMesh 2D configurado para el movimiento del colono
+[33mb340d2e[m Movimiento con clic del colono modo fantasma
+[33m4634b43[m Setup Git LFS
+[33mc5177b6[m Initial commit: Estructura base del proyecto
